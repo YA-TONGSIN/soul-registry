@@ -1,4 +1,4 @@
-﻿// Ieum Ledger · register page — the ONLY place networks are configured.
+// Ieum Ledger · register page — the ONLY place networks are configured.
 // The page refuses any network that is not listed here with testnet:true.
 //
 // ─── MAINNET (disabled on purpose) ─────────────────────────────────────────
@@ -39,10 +39,10 @@ window.IEUM_CONFIG = {
     donation: {
       enabled: false,
       page: "donate.html",
-      address: "",
+      address: "0x82F385D7698fAD15Ff14Ed6BB22F4a3B21C5CF43", // owner-provided 2026-10-26, dedicated donation MetaMask account
       addressType: "evm",
-      network: { ko: "", en: "" },
-      assets: [],
+      network: { ko: "Base 메인넷 (체인 ID 8453)", en: "Base mainnet (chain ID 8453)" },
+      assets: ["USDC", "ETH"],
       note: { ko: "", en: "" },
     },
   },

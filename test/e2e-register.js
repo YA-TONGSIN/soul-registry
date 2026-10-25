@@ -1,4 +1,4 @@
-﻿// End-to-end test of register/ against a LOCAL hardhat node (never touches a testnet/mainnet).
+// End-to-end test of register/ against a LOCAL hardhat node (never touches a testnet/mainnet).
 // Run: node test/e2e-register.js        (needs: npm i, npx hardhat compile, Microsoft Edge)
 // The "wallet" is an EIP-1193 mock backed by hardhat's well-known default test accounts (public keys, worthless).
 const fs = require("fs");
@@ -396,7 +396,7 @@ async function main() {
     const dsrc = fs.readFileSync(path.join(REG_DIR, "donate.js"), "utf8") + fs.readFileSync(path.join(REG_DIR, "donate-check.js"), "utf8");
     check("donate.js/donate-check.js have no fetch/XHR/sendBeacon/WebSocket", !forbidden.test(dsrc.replace(/\/\*[\s\S]*?\*\//g, "")));
     check("donate.html CSP has connect-src 'none'", /Content-Security-Policy[^>]*connect-src 'none'/.test(fs.readFileSync(path.join(REG_DIR, "donate.html"), "utf8")));
-    check("real config.js ships with donation.enabled=false and empty address", /donation:\s*\{\s*enabled: false,\s*page: "donate.html",\s*address: "",/.test(config));
+    check("real config.js ships with donation.enabled=false (stays hidden until owner turns it on)", /donation:\s*\{\s*enabled: false,/.test(config));
 
     const TEST_ADDR = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"; // hardhat default account #1 (public, worthless)
     const ON = { enabled: true, page: "donate.html", address: TEST_ADDR, addressType: "evm", network: { ko: "Base 메인넷 (체인 ID 8453)", en: "Base mainnet (chain ID 8453)" }, assets: ["USDC", "ETH"], note: { ko: "", en: "" } };
