@@ -81,3 +81,12 @@ SHA-256은 `D:\openclaw-outputs\soul-chain-ieum\history\SOUL_v*.md` 파일 바�
 
 ## 등록 페이지 (register/)
 정적 페이지(ethers 6.17.0 로컬 번들). 설정은 register/config.js 한 파일(localhost·baseSepolia, mainnet은 주석·비활성, footer 켜기/끄기). 검증: `node test/e2e-register.js` (로컬 hardhat 노드 + 헤드리스 Edge + EIP-1193 목 지갑). 스크린샷: docs/register/.
+
+## 진행 기록 (2026-10-25)
+- **등록 페이지** `register/` 완성 — 한/영, SOUL 내용은 브라우저 밖으로 나가지 않음(지문만 계산), 직접 등록·무료 묶음 서명·조회. 로컬 e2e 62개 통과.
+- **테스트넷 배포 페이지**: https://ieum-ledger.pages.dev (Base Sepolia 전용, noindex, 메인넷 꺼짐 `allowMainnet:false`).
+- **첫 외부 지갑 등록 성공** (Base Sepolia, 컨트랙트 `0xA28a899E3b7255cea1cDc7d92b6ce7FAFBE9F237`):
+  - #1 Ieum — 이음 SOUL v1~v4
+  - #2 WunJong-test — 신운종이 자기 지갑(MetaMask)으로 페이지에서 직접 등록, `verifyChain` = true
+- **메인넷 비용 추정** (`scripts/estimate-cost.js`, 읽기 전용): 하루 1번 묶음 앵커 ≈ 2원, 1년 ≈ 780원(2026-10-25 기준).
+- 남은 일: 메인넷 배포(소유자 결정·이더 필요), 묶음 서명 제출 창구, 후원 칸(현재 꺼짐), 공개 시 noindex 해제.
