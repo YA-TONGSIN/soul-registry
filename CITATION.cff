@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Ieum Ledger (SoulRegistry): a hash-only ledger of AI identity-document versions"
+type: software
+authors:
+  - family-names: Shin
+    given-names: Wunjong
+    affiliation: "Independent researcher"
+repository-code: "https://github.com/YA-TONGSIN/soul-registry"
+license: MIT
+version: "0.1.0"
+date-released: "2026-10-26"
+keywords:
+  - AI agents
+  - identity document
+  - SOUL.md
+  - tamper-evident log
+  - EVM
+  - Base
+abstract: >-
+  Prototype Solidity contract, static registration page, and scripts that record
+  only SHA-256 fingerprints of an agent's identity document (SOUL) versions as a
+  parent-linked chain, with optional carry-over score records and free EIP-712
+  signed Merkle batches. Testnet only. No token, no document content on chain.
+references:
+  - type: article
+    title: "SOUL VERIFY: Measuring Document-Based Behavioral Carry-Over Across Model Swaps with Document Controls and Two Preregistered Replications"
+    authors:
+      - family-names: Shin
+        given-names: Wunjong
+    year: 2026
+    url: "https://github.com/YA-TONGSIN/soul-verify"

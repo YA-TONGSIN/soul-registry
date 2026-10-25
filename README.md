@@ -98,3 +98,11 @@ SHA-256은 `D:\openclaw-outputs\soul-chain-ieum\history\SOUL_v*.md` 파일 바�
   - **이름 등록 절차(후원자)**: 후원 후 같은 페이지에서 이름 + 거래 해시 입력 → 지갑이 `Ieum Ledger donor name: <이름> | tx: <txHash>`에 서명(EIP-191, 네트워크 요청 없음) → 서명 JSON 내려받기 → 문의 메일로 전송. 이름은 24자 이내, 글자·숫자·공백·`_`·`-`만(URL·연락처·욕설·긴 숫자 금지).
   - **이름 반영(운영자)**: `node scripts/add-donor-name.js <받은.json>` — 이름 규칙, 메시지 일치, 서명자 == 해당 tx의 보낸 주소, tx가 donors.json에 있음을 오프라인으로 검증해 `data/donor-names.json`에 저장하고 donors.json에 병합(이후 update-donors.js도 같은 결과 유지). 이름을 눈으로도 확인할 것.
   - e2e 120개 통과(목업 명단·빈 목록·외부 요청 없음·서명 검증·위조 거부).
+
+## 라이선스
+- **코드** (`contracts/`, `lib/`, `scripts/`, `test/`, `register/`, `viewer/`): MIT — [LICENSE](LICENSE). `contracts/SoulRegistry.sol`의 SPDX 헤더도 `MIT`.
+- **문서** (`whitepaper/`, `research/`, `docs/`, `DESIGN.md`, 이 README 등): CC BY 4.0 — [LICENSE-DOCS](LICENSE-DOCS)
+- **예외 — 함께 들어 있는 외부 코드는 각자 라이선스**: `register/vendor/ethers-6.17.0.umd.min.js`(ethers.js, MIT, © 2016-2025 Richard Moore), `register/vendor/qrcode-generator-1.4.4.js`(MIT, © 2009 Kazuhiko Arase). 자세히는 [register/vendor/THIRD_PARTY_LICENSES.md](register/vendor/THIRD_PARTY_LICENSES.md).
+
+## 인용
+[CITATION.cff](CITATION.cff) 참고.
