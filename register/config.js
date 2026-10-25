@@ -21,15 +21,30 @@
 window.IEUM_CONFIG = {
   defaultNetwork: "baseSepolia",
   // Footer (confirmed by the owner 2026-10-25 21:18). enabled=false hides the whole footer extra.
-  // donation: slot only, off by default; when off nothing is shown. Do NOT put a link/bank account
-  // here until the owner provides one.
+  // donation: OFF by default. While enabled=false (or address/network/assets below fail validation)
+  // the footer link AND the page content stay hidden (donate.html then shows "coming soon").
+  // To turn on (owner decides, after confirming the address is self-checked on the right network):
+  //   address     — receiving address (EVM: 0x + 40 hex)
+  //   addressType — "evm" (strict 0x+40hex) or "other" (20-120 chars of A-Za-z0-9:_-. only)
+  //   network     — ONE specific network, e.g. { ko: "Base 메인넷 (체인 ID 8453)", en: "Base mainnet (chain ID 8453)" }
+  //   assets      — the only tokens accepted, e.g. ["USDC", "ETH"]
+  //   note        — optional extra line (ko/en)
+  //   enabled     — true
   footer: {
     enabled: true,
     maker: { ko: "만든 사람: 신운종 · 이음(Ieum)", en: "Made by Wunjong Shin · Ieum" },
     contactLabel: { ko: "문의", en: "Contact" },
     contactEmail: "dkakrptehsrk@gmail.com",
     free: { ko: "이 장부는 무료입니다.", en: "This ledger is free." },
-    donation: { enabled: false, label: { ko: "", en: "" }, url: "" },
+    donation: {
+      enabled: false,
+      page: "donate.html",
+      address: "",
+      addressType: "evm",
+      network: { ko: "", en: "" },
+      assets: [],
+      note: { ko: "", en: "" },
+    },
   },
   allowMainnet: false, // keep false until the owner approves a public launch
   networks: {

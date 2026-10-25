@@ -32,7 +32,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function waitRpc() {
   const p = new ethers.JsonRpcProvider(RPC);
-  for (let i = 0; i < 60; i++) { try { await p.getBlockNumber(); return p; } catch { await sleep(500); } }
+  for (let i = 0; i < 200; i++) { try { await p.getBlockNumber(); return p; } catch { await sleep(500); } } // node start can take ~1 min on a busy PC
   throw new Error("hardhat node did not start");
 }
 
@@ -390,6 +390,123 @@ async function main() {
       check(`mobile: no horizontal overflow on '${tab}' tab (scrollWidth ${sw} <= 390)`, sw <= 390);
     }
     await m.ctx.close();
+
+    // ═════ donation page ═════
+    console.log("[donate] footer link + donate.html");
+    const dsrc = fs.readFileSync(path.join(REG_DIR, "donate.js"), "utf8") + fs.readFileSync(path.join(REG_DIR, "donate-check.js"), "utf8");
+    check("donate.js/donate-check.js have no fetch/XHR/sendBeacon/WebSocket", !forbidden.test(dsrc.replace(/\/\*[\s\S]*?\*\//g, "")));
+    check("donate.html CSP has connect-src 'none'", /Content-Security-Policy[^>]*connect-src 'none'/.test(fs.readFileSync(path.join(REG_DIR, "donate.html"), "utf8")));
+    check("real config.js ships with donation.enabled=false and empty address", /donation:\s*\{\s*enabled: false,\s*page: "donate.html",\s*address: "",/.test(config));
+
+    const TEST_ADDR = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"; // hardhat default account #1 (public, worthless)
+    const ON = { enabled: true, page: "donate.html", address: TEST_ADDR, addressType: "evm", network: { ko: "Base 메인넷 (체인 ID 8453)", en: "Base mainnet (chain ID 8453)" }, assets: ["USDC", "ETH"], note: { ko: "", en: "" } };
+    async function donPage(viewport, donation) {
+      const dctx = await browser.newContext({ viewport, locale: "ko-KR", permissions: ["clipboard-read", "clipboard-write"] });
+      if (donation) await dctx.route("**/config.js", (route) => route.fulfill({ contentType: "text/javascript", body: config + `\nwindow.IEUM_CONFIG.footer.donation = ${JSON.stringify(donation)};\n` }));
+      const dpage = await dctx.newPage();
+      const reqs = [];
+      dpage.on("request", (r) => reqs.push(r.url()));
+      dpage.on("pageerror", (e) => console.log("  [pageerror]", e.message));
+      return { dctx, dpage, reqs };
+    }
+
+    // (a) default (off): no link on the register page, "coming soon" on the page, no address / QR / warning
+    const off = await donPage({ width: 1280, height: 900 }, null);
+    await off.dpage.goto("http://127.0.0.1:4173/?net=localhost");
+    await off.dpage.waitForSelector("#net");
+    check("OFF: footer shows no support link", await off.dpage.locator("#footDonation").isHidden() && (await off.dpage.locator('a[href="donate.html"]').count()) === 0);
+    await off.dpage.goto("http://127.0.0.1:4173/donate.html");
+    await off.dpage.waitForSelector("#donOff");
+    check("OFF: donate.html says coming soon", await off.dpage.locator("#donOff").isVisible() && /준비 중/.test(await off.dpage.locator("#donOff").innerText()));
+    check("OFF: donate.html shows no address / QR / warning / copy button", await off.dpage.locator("#donOn").isHidden() && !(await off.dpage.content()).includes(TEST_ADDR) && (await off.dpage.locator("#qrBox svg").count()) === 0 && await off.dpage.locator("#copyBtn").isHidden());
+    await off.dpage.screenshot({ path: path.join(SHOTS, "donate-off-desktop-ko.png") });
+    await off.dctx.close();
+
+    // enabled but invalid -> still hidden (bad address, bad type, missing network/assets, non-https-style page)
+    const bads = [
+      ["EVM address too short", { ...ON, address: TEST_ADDR.slice(0, 40) }],
+      ["EVM address with non-hex", { ...ON, address: "0x" + "z".repeat(40) }],
+      ["empty address", { ...ON, address: "" }],
+      ["unknown addressType", { ...ON, addressType: "foo" }],
+      ["no network text", { ...ON, network: { ko: "", en: "Base" } }],
+      ["no assets", { ...ON, assets: [] }],
+      ["page with a path/scheme", { ...ON, page: "https://evil.example/x.html" }],
+      ["enabled=\"true\" string", { ...ON, enabled: "true" }],
+      ["other-type address with spaces", { ...ON, addressType: "other", address: "bc1 not an address at all really" }],
+    ];
+    for (const [name, cfgBad] of bads) {
+      const b = await donPage({ width: 1280, height: 900 }, cfgBad);
+      await b.dpage.goto("http://127.0.0.1:4173/?net=localhost");
+      await b.dpage.waitForSelector("#net");
+      const linkHidden = await b.dpage.locator("#footDonation").isHidden();
+      await b.dpage.goto("http://127.0.0.1:4173/donate.html");
+      await b.dpage.waitForSelector("#donOff");
+      const hidden = await b.dpage.locator("#donOn").isHidden() && (await b.dpage.locator("#qrBox svg").count()) === 0;
+      check(`INVALID (${name}): no link, page stays "coming soon"`, linkHidden && hidden);
+      await b.dctx.close();
+    }
+    // a valid non-EVM address passes the simple check
+    const okOther = await donPage({ width: 1280, height: 900 }, { ...ON, addressType: "other", address: "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE", network: { ko: "트론", en: "TRON" }, assets: ["USDT"] });
+    await okOther.dpage.goto("http://127.0.0.1:4173/donate.html");
+    await okOther.dpage.waitForSelector("#donAddress");
+    check("other-type address (TRON-style) is accepted by the simple check", await okOther.dpage.locator("#donOn").isVisible() && (await okOther.dpage.textContent("#donAddress")) === "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE");
+    await okOther.dctx.close();
+
+    // (b) ON with the public test address
+    const on = await donPage({ width: 1280, height: 900 }, ON);
+    await on.dpage.goto("http://127.0.0.1:4173/?net=localhost");
+    await on.dpage.waitForSelector("#net");
+    check("ON: footer shows the support link to donate.html", await on.dpage.locator("#footDonation a").isVisible() && (await on.dpage.getAttribute("#footDonation a", "href")) === "donate.html" && (await on.dpage.textContent("#footDonation a")) === "후원하기");
+    await on.dpage.click('[data-lang="en"]');
+    check("ON: footer link label in English = Support", (await on.dpage.textContent("#footDonation a")) === "Support");
+    await on.dpage.click('[data-lang="ko"]');
+    await on.dpage.click("#footDonation a");
+    await on.dpage.waitForSelector("#donAddress");
+    check("ON: address shown exactly", (await on.dpage.textContent("#donAddress")) === TEST_ADDR);
+    const warnKo = await on.dpage.locator(".warn").innerText();
+    check("ON: network warning names the network, tokens and the loss risk (ko)", /Base 메인넷/.test(warnKo) && /USDC \/ ETH/.test(warnKo) && /되찾을 수 없습니다/.test(warnKo) && /출금 네트워크/.test(warnKo), warnKo.slice(0, 60));
+    const pageKo = await on.dpage.locator("main").innerText();
+    check("ON: states free / optional-no-benefit / public-chain / irreversible (ko)", /무료/.test(pageKo) && /대가·권한·우선 등록/.test(pageKo) && /블록체인 거래는 공개/.test(pageKo) && /되돌릴 수 없습니다/.test(pageKo));
+    check("ON: warning appears above the address", (await on.dpage.locator(".warn").boundingBox()).y < (await on.dpage.locator("#donAddress").boundingBox()).y);
+    const qrInfo = await on.dpage.evaluate(() => { const s = document.querySelector("#qrBox svg"); const d = s && s.querySelector("path").getAttribute("d"); return { ok: !!s, len: d ? d.length : 0, w: s ? s.getBoundingClientRect().width : 0, label: s && s.getAttribute("aria-label") }; });
+    check("ON: QR rendered locally as SVG (non-trivial, labelled)", qrInfo.ok && qrInfo.len > 500 && qrInfo.w > 100 && !!qrInfo.label, JSON.stringify(qrInfo));
+    // QR content: decode with the browser's BarcodeDetector when available
+    const svgMarkup = await on.dpage.evaluate(() => document.querySelector("#qrBox svg").outerHTML);
+    const dec = await browser.newPage();
+    const decoded = await dec.evaluate(async (svg) => {
+      if (!("BarcodeDetector" in window)) return { unsupported: true };
+      const img = new Image(); img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"'));
+      await img.decode();
+      const cv = document.createElement("canvas"); cv.width = 400; cv.height = 400; cv.getContext("2d").drawImage(img, 0, 0, 400, 400);
+      const r = await new BarcodeDetector({ formats: ["qr_code"] }).detect(cv);
+      return { text: r[0] && r[0].rawValue };
+    }, svgMarkup).catch((e) => ({ err: String(e) }));
+    if (decoded.unsupported || decoded.err) console.log("  (note) QR decode skipped:", decoded.unsupported ? "BarcodeDetector unavailable" : decoded.err);
+    else check("ON: QR decodes to exactly the address", decoded.text === TEST_ADDR, decoded.text);
+    await dec.close();
+    // copy
+    await on.dpage.click("#copyBtn");
+    await on.dpage.waitForFunction(() => /복사했습니다/.test(document.getElementById("copyMsg").textContent));
+    check("ON: copy button puts the exact address on the clipboard", (await on.dpage.evaluate(() => navigator.clipboard.readText())) === TEST_ADDR);
+    await on.dpage.screenshot({ path: path.join(SHOTS, "donate-desktop-ko.png"), fullPage: true });
+    await on.dpage.click('[data-lang="en"]');
+    const warnEn = await on.dpage.locator(".warn").innerText();
+    check("ON: English warning names network + tokens + loss risk", /Base mainnet/.test(warnEn) && /USDC \/ ETH/.test(warnEn) && /lose the funds/.test(warnEn) && /withdrawal network/.test(warnEn), warnEn.slice(0, 60));
+    check("ON: English page states optional / public / irreversible", /Support is optional/.test(await on.dpage.locator("main").innerText()) && /public/.test(await on.dpage.locator("main").innerText()) && /cannot be undone/.test(await on.dpage.locator("main").innerText()));
+    check("ON: language persists to the register page footer link (Support)", (await on.dpage.evaluate(() => localStorage.getItem("ieum-lang"))) === "en");
+    await on.dpage.screenshot({ path: path.join(SHOTS, "donate-desktop-en.png"), fullPage: true });
+    const ownOrigins = new Set(on.reqs.map((u) => new URL(u).origin));
+    check("ON: no external network request (only the local static server)", [...ownOrigins].every((o) => o === "http://127.0.0.1:4173"), [...ownOrigins].join(","));
+    await on.dctx.close();
+    // mobile 390
+    const onm = await donPage({ width: 390, height: 844 }, ON);
+    await onm.dpage.goto("http://127.0.0.1:4173/donate.html");
+    await onm.dpage.waitForSelector("#donAddress");
+    check("mobile: donate page has no horizontal overflow", (await onm.dpage.evaluate(() => document.documentElement.scrollWidth)) <= 390);
+    await onm.dpage.screenshot({ path: path.join(SHOTS, "donate-mobile-390-ko.png"), fullPage: true });
+    await onm.dpage.click('[data-lang="en"]');
+    await onm.dpage.screenshot({ path: path.join(SHOTS, "donate-mobile-390-en.png"), fullPage: true });
+    await onm.dctx.close();
   } finally {
     if (browser) await browser.close();
     server.close();

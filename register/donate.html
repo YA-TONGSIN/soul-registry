@@ -1,0 +1,73 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Display-only page: no network at all (connect-src 'none'); QR is drawn locally from vendor/qrcode-generator. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>후원 · 이음 장부 / Support · Ieum Ledger</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="skip">본문으로 건너뛰기</a>
+<header class="top">
+  <div>
+    <h1 data-i18n="donTitle">후원</h1>
+    <p class="sub"><a href="index.html" data-i18n="donBack"></a></p>
+  </div>
+  <div class="controls">
+    <div class="group" role="group" aria-labelledby="langLabel">
+      <span id="langLabel" class="lbl" data-i18n="langLabel">언어</span>
+      <button type="button" class="seg" data-lang="ko" aria-pressed="true">한국어</button>
+      <button type="button" class="seg" data-lang="en" aria-pressed="false">English</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="card">
+    <p class="good" id="donFree"></p>
+    <p data-i18n="donIntro"></p>
+
+    <div id="donOff" class="box">
+      <p data-i18n="donSoon"></p>
+    </div>
+
+    <div id="donOn" hidden>
+      <div class="warn" role="alert">
+        <strong data-i18n="donWarnTitle"></strong>
+        <p id="donWarn"></p>
+        <p id="donExchange"></p>
+      </div>
+
+      <dl class="kv">
+        <dt data-i18n="donNetworkLbl"></dt><dd id="donNetwork"></dd>
+        <dt data-i18n="donAssetsLbl"></dt><dd id="donAssets"></dd>
+        <dt data-i18n="donAddressLbl"></dt><dd><code id="donAddress"></code></dd>
+      </dl>
+      <div class="row">
+        <button type="button" id="copyBtn" class="btn" data-i18n="donCopy"></button>
+      </div>
+      <p id="copyMsg" class="msg" role="status" aria-live="polite"></p>
+      <div id="qrBox" class="qr"></div>
+      <p class="help" data-i18n="donQrHelp"></p>
+      <p id="donNote" class="help" hidden></p>
+
+      <ul class="donfacts">
+        <li data-i18n="donOptional"></li>
+        <li data-i18n="donPublic"></li>
+        <li data-i18n="donNoRefund"></li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="foot"><p data-i18n="footerNote"></p></footer>
+
+<script src="config.js"></script>
+<script src="i18n.js"></script>
+<script src="donate-check.js"></script>
+<script src="vendor/qrcode-generator-1.4.4.js"></script>
+<script src="donate.js"></script>
+</body>
+</html>

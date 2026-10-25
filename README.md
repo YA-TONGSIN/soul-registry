@@ -90,3 +90,5 @@ SHA-256은 `D:\openclaw-outputs\soul-chain-ieum\history\SOUL_v*.md` 파일 바�
   - #2 WunJong-test — 신운종이 자기 지갑(MetaMask)으로 페이지에서 직접 등록, `verifyChain` = true
 - **메인넷 비용 추정** (`scripts/estimate-cost.js`, 읽기 전용): 하루 1번 묶음 앵커 ≈ 2원, 1년 ≈ 780원(2026-10-25 기준).
 - 남은 일: 메인넷 배포(소유자 결정·이더 필요), 묶음 서명 제출 창구, 후원 칸(현재 꺼짐), 공개 시 noindex 해제.
+
+- **후원 페이지(기본 꺼짐)** `register/donate.html` — 자리표시. `config.js` `footer.donation`의 `enabled/address/addressType/network/assets`가 모두 유효할 때만 푸터 링크·주소·QR(로컬 생성, vendor/qrcode-generator 1.4.4 MIT)이 보임. 외부 요청 없음. e2e 91개 통과.

@@ -95,10 +95,9 @@
       const a = el("a", { href: "mailto:" + f.contactEmail, text: f.contactEmail });
       cEl.replaceChildren(document.createTextNode(((f.contactLabel && f.contactLabel[lang]) || "") + ": "), a);
     }
-    const d = f.donation, dEl = $("footDonation");
-    const dOn = !!(d && d.enabled && d.url && /^https:\/\//.test(d.url));
-    dEl.hidden = !dOn;
-    if (dOn) dEl.replaceChildren(el("a", { href: d.url, text: (d.label && d.label[lang]) || d.url, rel: "noopener" }));
+    const dEl = $("footDonation"), dState = window.IEUM_DONATION_CHECK(CFG);
+    dEl.hidden = !dState.ok;
+    if (dState.ok) dEl.replaceChildren(el("a", { href: dState.d.page, text: t("donateLink") }));
   }
   function fillNetSelect() {
     const sel = $("net");
