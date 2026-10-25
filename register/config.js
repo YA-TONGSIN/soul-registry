@@ -37,7 +37,7 @@ window.IEUM_CONFIG = {
     contactEmail: "dkakrptehsrk@gmail.com",
     free: { ko: "이 장부는 무료입니다.", en: "This ledger is free." },
     donation: {
-      enabled: false,
+      enabled: true, // owner confirmed 2026-10-26 08:11 (unit OK)
       page: "donate.html",
       address: "0x82F385D7698fAD15Ff14Ed6BB22F4a3B21C5CF43", // owner-provided 2026-10-26, dedicated donation MetaMask account
       addressType: "evm",

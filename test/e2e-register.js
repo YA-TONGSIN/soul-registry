@@ -32,7 +32,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function waitRpc() {
   const p = new ethers.JsonRpcProvider(RPC);
-  for (let i = 0; i < 200; i++) { try { await p.getBlockNumber(); return p; } catch { await sleep(500); } } // node start can take ~1 min on a busy PC
+  for (let i = 0; i < 480; i++) { try { await p.getBlockNumber(); return p; } catch { await sleep(500); } } // node start can take ~1 min on a busy PC
   throw new Error("hardhat node did not start");
 }
 
@@ -170,7 +170,7 @@ async function main() {
     check("footer en text", (await page.textContent("#footMaker")) === "Made by Wunjong Shin · Ieum" && (await page.textContent("#footContact")) === "Contact: dkakrptehsrk@gmail.com" && (await page.textContent("#footFree")) === "This ledger is free.");
     await page.click('[data-lang="ko"]');
     check("language toggle back -> Korean", /절대 올라가지/.test(await page.locator(".notice").innerText()));
-    check("footer ko: maker / contact mailto / free line; donation hidden", (await page.textContent("#footMaker")) === "만든 사람: 신운종 · 이음(Ieum)" && (await page.textContent("#footContact")) === "문의: dkakrptehsrk@gmail.com" && (await page.getAttribute("#footContact a", "href")) === "mailto:dkakrptehsrk@gmail.com" && (await page.textContent("#footFree")) === "이 장부는 무료입니다." && await page.locator("#footDonation").isHidden());
+    check("footer ko: maker / contact mailto / free line; support link shown (donation on)", (await page.textContent("#footMaker")) === "만든 사람: 신운종 · 이음(Ieum)" && (await page.textContent("#footContact")) === "문의: dkakrptehsrk@gmail.com" && (await page.getAttribute("#footContact a", "href")) === "mailto:dkakrptehsrk@gmail.com" && (await page.textContent("#footFree")) === "이 장부는 무료입니다." && await page.locator("#footDonation").isVisible() && (await page.locator('a[href="donate.html"]').count()) === 1);
     check("network select shows localhost", (await page.inputValue("#net")) === "localhost");
     const unlabeled = await page.evaluate(() => [...document.querySelectorAll("input,select,textarea")].filter((e) => !e.labels?.length && !e.getAttribute("aria-label") && e.type !== "radio" && e.type !== "checkbox" || (e.type === "checkbox" && !e.closest("label"))).map((e) => e.id));
     check("every form control has an accessible label", unlabeled.length === 0, unlabeled.join(","));
@@ -396,7 +396,7 @@ async function main() {
     const dsrc = fs.readFileSync(path.join(REG_DIR, "donate.js"), "utf8") + fs.readFileSync(path.join(REG_DIR, "donate-check.js"), "utf8");
     check("donate.js/donate-check.js have no fetch/XHR/sendBeacon/WebSocket", !forbidden.test(dsrc.replace(/\/\*[\s\S]*?\*\//g, "")));
     check("donate.html CSP has connect-src 'none'", /Content-Security-Policy[^>]*connect-src 'none'/.test(fs.readFileSync(path.join(REG_DIR, "donate.html"), "utf8")));
-    check("real config.js ships with donation.enabled=false (stays hidden until owner turns it on)", /donation:\s*\{\s*enabled: false,/.test(config));
+    check("real config.js donation: enabled with the owner address on Base", /donation:\s*\{\s*enabled: true,/.test(config) && config.includes("0x82F385D7698fAD15Ff14Ed6BB22F4a3B21C5CF43"));
 
     const TEST_ADDR = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"; // hardhat default account #1 (public, worthless)
     const ON = { enabled: true, page: "donate.html", address: TEST_ADDR, addressType: "evm", network: { ko: "Base 메인넷 (체인 ID 8453)", en: "Base mainnet (chain ID 8453)" }, assets: ["USDC", "ETH"], note: { ko: "", en: "" } };
@@ -411,7 +411,7 @@ async function main() {
     }
 
     // (a) default (off): no link on the register page, "coming soon" on the page, no address / QR / warning
-    const off = await donPage({ width: 1280, height: 900 }, null);
+    const off = await donPage({ width: 1280, height: 900 }, { ...ON, enabled: false });
     await off.dpage.goto("http://127.0.0.1:4173/?net=localhost");
     await off.dpage.waitForSelector("#net");
     check("OFF: footer shows no support link", await off.dpage.locator("#footDonation").isHidden() && (await off.dpage.locator('a[href="donate.html"]').count()) === 0);
