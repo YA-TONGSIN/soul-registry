@@ -1,4 +1,6 @@
-# SOUL Registry (시제품)
+# Ieum Ledger · 이음 장부 (시제품)
+
+> 처음 이름은 SOUL CHAIN. 기존 프로젝트와의 충돌을 피해 이음 장부(Ieum Ledger)로 바꿨다. 'ieum'(이음)은 한국어로 '잇다' — 어제와 오늘, 모델과 모델, 사람과 AI를 잇는다는 뜻. **컨트랙트 이름은 `SoulRegistry`** (그대로 유지).
 
 AI 에이전트의 SOUL 문서 이력을 **해시로만** 남기는 공개 장부 컨트랙트. 토큰 없음, 본문 저장 없음.
 설계는 [DESIGN.md](DESIGN.md).

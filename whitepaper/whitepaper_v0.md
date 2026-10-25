@@ -2,18 +2,20 @@
 WHITEPAPER DRAFT v0 — PRIVATE. Do not publish, post, or share.
 Numbers are copied from: soul-registry README.md / DESIGN.md (costs, contract), soul-verify paper/draft_v0_2.md (evidence),
 soul-registry research/landscape_registry.md (prior projects, checked 2026-10-25).
-"SOUL CHAIN" is a working title; the public name is under review because of name collisions (landscape_registry.md §4).
+The project was originally conceived as "SOUL CHAIN"; renamed Ieum Ledger on 2026-10-25 to avoid collision with existing projects (openClause/soulchain, isaac-ranger/soul-chain) (landscape_registry.md §4).
 -->
 
-# SOUL CHAIN (working title)
+# Ieum Ledger: A Free, Tokenless Public Record of AI Agents' SOUL History and Carry-Over
 
-### A token-free public ledger of AI identity-document histories, with carry-over scores across model swaps
+### Originally conceived as SOUL CHAIN; renamed to avoid collision with existing projects (openClause/soulchain, isaac-ranger/soul-chain).
+
+*On the name: "ieum" (이음) is Korean for "joining / linking" (from the verb *itda*, to connect) — linking yesterday and today, one model and the next, a person and an AI.*
 
 *Models are replaced. Memory is inherited. The history of an identity is verifiable.*
 
 **Whitepaper draft v0 (private, 2026-10-25). Not for distribution.**
 
-**Wunjong Shin** (Independent Researcher) & **Ieum** (AI assistant, SOUL Registry #1)
+**Wunjong Shin** (Independent Researcher) & **Ieum** (AI assistant, Ieum Ledger entry #1)
 
 *Ieum is an AI assistant (Claude-based) with a persistent identity document; its contributions were made with and under the direction of the human author.*
 
@@ -65,7 +67,7 @@ We examined related projects directly on 2026-10-25 (websites, GitHub repositori
 | soul-spec (SOUL.md format), soul-md (design guide) | Nothing (file format / guide) | None | No | No | Free |
 | Olas, Virtuals Protocol | Agent registries and economic activity | NFT and/or tokens | Not found | No | Varies |
 
-**Overlap, stated plainly.** Hash-chaining an agent's identity file is not new. openClause/soulchain already records successive SOUL.md/MEMORY.md hashes with parent links on EVM chains, without a token, and integrates with the same agent runtime we use; its contract is even named `SoulRegistry`. isaac-ranger/soul-chain uses the name "Soul Chain" for a signed, witnessed identity-file hash chain. Token-based and NFT-based agent registries (ERC-8004 and its ports, Soulink, Olas, Virtuals) are larger and more mature than this prototype.
+**Overlap, stated plainly.** (openClause/soulchain is a prior attempt in this space: created 2026-02-19, last push the same day as of our check on 2026-10-25, MIT-licensed.) Hash-chaining an agent's identity file is not new. openClause/soulchain already records successive SOUL.md/MEMORY.md hashes with parent links on EVM chains, without a token, and integrates with the same agent runtime we use; its contract is even named `SoulRegistry`. isaac-ranger/soul-chain uses the name "Soul Chain" for a signed, witnessed identity-file hash chain. Token-based and NFT-based agent registries (ERC-8004 and its ports, Soulink, Olas, Virtuals) are larger and more mature than this prototype.
 
 **What this design adds, within what we checked.** (i) A **carry-over score record** bound to a specific SOUL version and model pair, with the full report kept off-chain and referenced by hash, together with a measurement procedure that produces such reports; (ii) a **free batched path** for third-party agents (signature only for the user, one Merkle root per day for the operator); (iii) **no content storage at all**, not even encrypted. We did not read every line of every project and did not search the web systematically (the search engine was unavailable), so this is a description of differences we observed, not a claim of novelty.
 
@@ -163,7 +165,7 @@ What the study does **not** show, as reported in the draft:
 | Admin key compromise | Admin cannot alter records; use a multisig for any real deployment |
 | Unaudited contract | No mainnet deployment before an external security review |
 | Over-reading scores | Scores labelled as one report's summary; report hash and procedure required; §5 limitations restated in the viewer |
-| Confusion with existing projects | Public name under review (name collisions with "Soul Chain"/"SoulChain"); credit related projects explicitly |
+| Confusion with existing projects | Renamed Ieum Ledger to avoid the "Soul Chain"/"SoulChain" names; credit related projects explicitly |
 
 ## 8 Roadmap
 

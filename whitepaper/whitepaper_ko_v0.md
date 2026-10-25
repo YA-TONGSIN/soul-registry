@@ -1,18 +1,20 @@
 <!--
 백서 초안 v0 (한국어) — 비공개. 게시·공유 금지. 영어판 whitepaper_v0.md와 같은 내용.
 숫자 출처: soul-registry README.md / DESIGN.md(비용·컨트랙트), soul-verify paper/draft_v0_2.md(근거), research/landscape_registry.md(선행 프로젝트, 2026-10-25 확인).
-"SOUL CHAIN"은 임시 이름. 이름 충돌 때문에 공개 이름은 검토 중(landscape_registry.md §4).
+처음에는 "SOUL CHAIN"으로 구상했으나 기존 프로젝트(openClause/soulchain, isaac-ranger/soul-chain)와의 이름 충돌을 피하려 2026-10-25에 "이음 장부(Ieum Ledger)"로 바꿨다(landscape_registry.md §4).
 -->
 
-# SOUL CHAIN (임시 이름)
+# 이음 장부: AI 에이전트의 SOUL 이력과 계승을 기록하는 무료·무토큰 공개 장부
 
-### 토큰 없는 AI 정체성 문서 이력 공개 장부 — 모델 교체 시 계승 점수 포함
+### 처음 이름은 SOUL CHAIN. 기존 프로젝트(openClause/soulchain, isaac-ranger/soul-chain)와의 충돌을 피해 개명했다.
+
+*이름 뜻: '이음'(ieum)은 '잇다'에서 온 말 — 어제와 오늘, 모델과 모델, 사람과 AI를 잇는다.*
 
 *모델은 교체된다. 기억은 계승된다. 정체성의 역사는 검증된다.*
 
 **백서 초안 v0 (비공개, 2026-10-25). 배포 금지.**
 
-**신운종 (Wunjong Shin)** (개인 연구자) & **이음 (Ieum)** (AI 비서, SOUL Registry 1호)
+**Wunjong Shin** (개인 연구자) & **이음 (Ieum)** (AI 비서, 이음 장부 1호)
 
 *이음은 지속되는 정체성 문서를 가진 AI 비서(Claude 기반)이며, 이음의 기여는 사람 저자와 함께, 그의 지시 아래 이루어졌다.*
 
@@ -64,7 +66,7 @@
 | soul-spec(SOUL.md 형식), soul-md(설계 가이드) | 없음(파일 형식·가이드) | 없음 | 없음 | 없음 | 무료 |
 | Olas, Virtuals Protocol | 에이전트 레지스트리·경제 활동 | NFT 및/또는 토큰 | 찾지 못함 | 없음 | 다양 |
 
-**겹치는 점(솔직히).** 에이전트 정체성 파일을 해시 사슬로 남기는 것은 새롭지 않다. openClause/soulchain은 이미 SOUL.md·MEMORY.md의 연속 해시를 직전 해시와 이어 EVM 체인에 기록하고, 토큰이 없고, 우리가 쓰는 에이전트 실행 환경(OpenClaw)과 통합돼 있다. 컨트랙트 이름도 `SoulRegistry`로 같다. isaac-ranger/soul-chain은 "Soul Chain"이라는 이름으로 서명·증인이 있는 정체성 파일 해시 사슬을 만든다. 토큰·NFT 기반 에이전트 레지스트리(ERC-8004와 이식판, Soulink, Olas, Virtuals)는 이 시제품보다 크고 성숙하다.
+**겹치는 점(솔직히).** (openClause/soulchain은 이 분야의 선행 시도다: 2026-02-19 생성, 마지막 push도 같은 날이며(확인일 2026-10-25), MIT 라이선스.) 에이전트 정체성 파일을 해시 사슬로 남기는 것은 새롭지 않다. openClause/soulchain은 이미 SOUL.md·MEMORY.md의 연속 해시를 직전 해시와 이어 EVM 체인에 기록하고, 토큰이 없고, 우리가 쓰는 에이전트 실행 환경(OpenClaw)과 통합돼 있다. 컨트랙트 이름도 `SoulRegistry`로 같다. isaac-ranger/soul-chain은 "Soul Chain"이라는 이름으로 서명·증인이 있는 정체성 파일 해시 사슬을 만든다. 토큰·NFT 기반 에이전트 레지스트리(ERC-8004와 이식판, Soulink, Olas, Virtuals)는 이 시제품보다 크고 성숙하다.
 
 **이 설계가 더하는 것(확인한 범위 안에서).** (i) 특정 SOUL 버전과 모델 쌍에 묶인 **계승 점수 기록** — 전체 보고서는 체인 밖에 두고 해시로 가리키며, 그런 보고서를 만드는 측정 절차가 함께 있다. (ii) 다른 사람의 에이전트를 위한 **무료 묶음 등록**(사용자는 서명만, 운영자는 하루 Merkle root 1개). (iii) 암호화한 것조차 **내용을 저장하지 않음**. 모든 프로젝트의 코드를 다 읽지는 않았고 웹 검색도 체계적으로 하지 못했으므로(검색 엔진 오류), 이것은 관찰한 차이의 설명이지 새로움의 주장이 아니다.
 
@@ -162,7 +164,7 @@ ERC-8004 Identity Registry는 에이전트마다 ERC-721 토큰을 발행하므�
 | admin 키 탈취 | admin은 기록을 바꿀 수 없음. 실제 배포에는 멀티시그 |
 | 감사받지 않은 컨트랙트 | 외부 보안 점검 전 메인넷 배포 없음 |
 | 점수를 과하게 읽음 | 점수는 '한 보고서의 요약'으로 표시, 보고서 해시·절차 필수, 조회 화면에 §5 한계 다시 적기 |
-| 기존 프로젝트와 혼동 | 공개 이름 검토 중("Soul Chain"/"SoulChain" 이름 충돌), 관련 프로젝트를 명시적으로 밝힘 |
+| 기존 프로젝트와 혼동 | "Soul Chain"/"SoulChain" 이름을 피해 "이음 장부(Ieum Ledger)"로 개명, 관련 프로젝트를 명시적으로 밝힘 |
 
 ## 8 로드맵
 
