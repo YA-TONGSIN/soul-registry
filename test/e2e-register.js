@@ -394,14 +394,29 @@ async function main() {
     // ═════ donation page ═════
     console.log("[donate] footer link + donate.html");
     const dsrc = fs.readFileSync(path.join(REG_DIR, "donate.js"), "utf8") + fs.readFileSync(path.join(REG_DIR, "donate-check.js"), "utf8");
-    check("donate.js/donate-check.js have no fetch/XHR/sendBeacon/WebSocket", !forbidden.test(dsrc.replace(/\/\*[\s\S]*?\*\//g, "")));
-    check("donate.html CSP has connect-src 'none'", /Content-Security-Policy[^>]*connect-src 'none'/.test(fs.readFileSync(path.join(REG_DIR, "donate.html"), "utf8")));
+    const dsrcNoFetch = dsrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/fetch\("donors\.json", \{ cache: "no-store", credentials: "omit" \}\)/g, "");
+    check("donate.js/donate-check.js: only network use is fetch of the static donors.json (no XHR/sendBeacon/WebSocket/other fetch)", !forbidden.test(dsrcNoFetch) && (dsrc.match(/\bfetch\(/g) || []).length === 1);
+    check("donor-name.js / add-donor-name.js verifier have no network code", !forbidden.test(fs.readFileSync(path.join(REG_DIR, "donor-name.js"), "utf8")) && !/\bfetch\b|https?:\/\//.test(fs.readFileSync(path.join(ROOT, "scripts", "add-donor-name.js"), "utf8")));
+    const donHtml = fs.readFileSync(path.join(REG_DIR, "donate.html"), "utf8");
+    const donCsp = (donHtml.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || "";
+    check("donate.html CSP: connect-src is exactly 'self' (no external origins anywhere in the CSP)", /connect-src 'self';/.test(donCsp) && !/https?:|\*/.test(donCsp), donCsp);
+    check("committed register/donors.json is valid (only tx/from/amount-type fields)", (() => { const j = JSON.parse(fs.readFileSync(path.join(REG_DIR, "donors.json"), "utf8")); return j.chainId === 8453 && Array.isArray(j.donations) && j.donations.every((d) => Object.keys(d).every((k) => ["txHash", "logIndex", "time", "token", "amount", "raw", "decimals", "from", "name"].includes(k))); })());
     check("real config.js donation: enabled with the owner address on Base", /donation:\s*\{\s*enabled: true,/.test(config) && config.includes("0x82F385D7698fAD15Ff14Ed6BB22F4a3B21C5CF43"));
 
     const TEST_ADDR = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"; // hardhat default account #1 (public, worthless)
     const ON = { enabled: true, page: "donate.html", address: TEST_ADDR, addressType: "evm", network: { ko: "Base 메인넷 (체인 ID 8453)", en: "Base mainnet (chain ID 8453)" }, assets: ["USDC", "ETH"], note: { ko: "", en: "" } };
-    async function donPage(viewport, donation) {
-      const dctx = await browser.newContext({ viewport, locale: "ko-KR", permissions: ["clipboard-read", "clipboard-write"] });
+    async function donPage(viewport, donation, opts = {}) {
+      const dctx = await browser.newContext({ viewport, locale: "ko-KR", permissions: ["clipboard-read", "clipboard-write"], acceptDownloads: true });
+      if (opts.donors !== undefined) await dctx.route("**/donors.json", (route) => opts.donors === null ? route.fulfill({ status: 404, body: "no" }) : route.fulfill({ contentType: "application/json", body: JSON.stringify(opts.donors) }));
+      if (opts.wallet !== undefined) {
+        const ws = KEYS.map((k) => new ethers.Wallet(k));
+        await dctx.exposeFunction("__rpc", async (m, p) => {
+          if (m === "eth_requestAccounts") return { result: [ws[opts.wallet].address.toLowerCase()] };
+          if (m === "personal_sign") return { result: await ws[opts.wallet].signMessage(ethers.toUtf8String(p[0])) };
+          return { error: { code: -32601, message: "unsupported " + m } };
+        });
+        await dctx.addInitScript(MOCK_INIT);
+      }
       if (donation) await dctx.route("**/config.js", (route) => route.fulfill({ contentType: "text/javascript", body: config + `\nwindow.IEUM_CONFIG.footer.donation = ${JSON.stringify(donation)};\n` }));
       const dpage = await dctx.newPage();
       const reqs = [];
@@ -507,6 +522,116 @@ async function main() {
     await onm.dpage.click('[data-lang="en"]');
     await onm.dpage.screenshot({ path: path.join(SHOTS, "donate-mobile-390-en.png"), fullPage: true });
     await onm.dctx.close();
+
+    // ═════ donor list + opt-in names ═════
+    console.log("[donors] list, totals, anonymity, opt-in signed names");
+    const { verify } = require("../scripts/add-donor-name.js");
+    const DNm = require("../register/donor-name.js");
+    const ADDR0 = new ethers.Wallet(KEYS[0]).address, ADDR1 = new ethers.Wallet(KEYS[1]).address; // hardhat #0/#1 (public test keys)
+    const TXA = "0x" + "a1".repeat(32), TXB = "0x" + "b2".repeat(32), TXC = "0x" + "c3".repeat(32);
+    const MOCK_DON = { version: 1, chainId: 8453, address: TEST_ADDR, updatedAt: "2026-10-27T01:02:03.000Z", scannedTo: 1, donations: [
+      { txHash: TXB, time: "2026-10-27T00:10:00.000Z", token: "ETH", amount: "0.01", raw: "10000000000000000", decimals: 18, from: ADDR1, name: "하늘" },
+      { txHash: TXA, logIndex: 3, time: "2026-10-26T09:00:00.000Z", token: "USDC", amount: "5.0", raw: "5000000", decimals: 6, from: ADDR0 },
+      { txHash: TXC, logIndex: 1, time: "2026-10-26T08:00:00.000Z", token: "USDC", amount: "2.5", raw: "2500000", decimals: 6, from: ADDR0, name: "<img src=x onerror=alert(1)>" },
+    ] };
+    const dn = await donPage({ width: 1280, height: 900 }, ON, { donors: MOCK_DON, wallet: 1 });
+    const dreqs = [];
+    dn.dpage.on("request", (r) => dreqs.push(r.url()));
+    await dn.dpage.goto("http://127.0.0.1:4173/donate.html");
+    await dn.dpage.waitForSelector("#donorsList li");
+    const rowsKo = await dn.dpage.locator("#donorsList li").allInnerTexts();
+    check("list: 3 rows, newest first (named 하늘 first)", rowsKo.length === 3 && /^하늘/.test(rowsKo[0]) && /0\.01 ETH/.test(rowsKo[0]) && /2026-10-27/.test(rowsKo[0]), rowsKo.join(" / "));
+    const short0 = DNm.shortAddr(ADDR0);
+    check("list: unsigned donor shown as anonymous with short address + amount + date", rowsKo[1].includes(`익명 후원자 (${short0})`) && /5\.00 USDC/.test(rowsKo[1]) && /2026-10-26/.test(rowsKo[1]), rowsKo[1]);
+    check("list: hostile/invalid name falls back to anonymous and injects no element", /익명 후원자/.test(rowsKo[2]) && (await dn.dpage.locator("#donorsList img").count()) === 0 && !rowsKo[2].includes("onerror"), rowsKo[2]);
+    check("list: totals per token (7.50 USDC + 0.01 ETH)", /7\.50 USDC \+ 0\.01 ETH/.test(await dn.dpage.textContent("#donorsTotal")), await dn.dpage.textContent("#donorsTotal"));
+    const hrefs = await dn.dpage.$$eval("#donorsList a", (as) => as.map((a) => a.href + "|" + a.rel));
+    check("list: basescan tx links (noopener noreferrer)", hrefs[0] === `https://basescan.org/tx/${TXB}|noopener noreferrer`, hrefs[0]);
+    check("list: states updated date", /2026-10-27/.test(await dn.dpage.textContent("#donorsUpdated")));
+    await dn.dpage.screenshot({ path: path.join(SHOTS, "donors-list-desktop-ko.png"), fullPage: true });
+    await dn.dpage.click('[data-lang="en"]');
+    const rowsEn = await dn.dpage.locator("#donorsList li").allInnerTexts();
+    check("list (en): Anonymous supporter + View transaction + Received so far", rowsEn[1].includes(`Anonymous supporter (${short0})`) && /View transaction/.test(rowsEn[1]) && /Received so far: 7\.50 USDC \+ 0\.01 ETH/.test(await dn.dpage.textContent("#donorsTotal")), rowsEn[1]);
+    check("list: only the local origin was contacted (donors.json is a same-origin GET)", dreqs.every((u) => new URL(u).origin === "http://127.0.0.1:4173") && dreqs.some((u) => u.endsWith("/donors.json")), dreqs.join(","));
+    await dn.dpage.click('[data-lang="ko"]');
+
+    // signing: wallet #1 (the sender of TXB) signs a name -> downloaded JSON -> operator verifier accepts
+    await dn.dpage.fill("#signName", "하늘 님");
+    await dn.dpage.fill("#signTx", TXB.toUpperCase().replace("0X", "0x"));
+    const [dlFile] = await Promise.all([dn.dpage.waitForEvent("download"), dn.dpage.click("#signBtn")]);
+    const signedPath = path.join(tmp, "signed1.json");
+    await dlFile.saveAs(signedPath);
+    const signed = JSON.parse(fs.readFileSync(signedPath, "utf8"));
+    check("sign: file has name/tx/signer/message/signature and the exact EIP-191 message", signed.name === "하늘 님" && signed.txHash === TXB && signed.signer.toLowerCase() === ADDR1.toLowerCase() && signed.message === `Ieum Ledger donor name: 하늘 님 | tx: ${TXB}` && /^0x[0-9a-f]{130}$/i.test(signed.signature), JSON.stringify(signed).slice(0, 160));
+    const okMsg = await dn.dpage.textContent("#signMsg");
+    check("sign: page tells the donor to email the file", /문의 메일/.test(okMsg) && (await dn.dpage.getAttribute("#signMail", "href")) === "mailto:dkakrptehsrk@gmail.com", okMsg);
+    const don = MOCK_DON.donations.map((d) => ({ ...d, txHash: d.txHash.toLowerCase() }));
+    const v = verify(signed, don);
+    check("add-donor-name: genuine signature accepted (signer == tx sender)", v.ok === true && v.entry.name === "하늘 님", JSON.stringify(v));
+    const badSig = (label, obj, exp) => { const r = verify(obj, don); check(`add-donor-name rejects: ${label}`, r.ok === false && (!exp || r.reason.includes(exp)), r.reason); };
+("message edited after signing (name/message mismatch)", { ...signed, name: "다른이름" }, "message does not match");
+("name AND message rewritten, old signature kept", { ...signed, name: "다른이름", message: DNm.message("다른이름", TXB) }, "signer");
+("signature from a different wallet (not the sender)", (() => { const w0 = new ethers.Wallet(KEYS[0]); const m = DNm.message("하늘 님", TXB); return { ...signed, signer: w0.address, signature: w0.signMessageSync(m) }; })(), "not the sender");
+("signer field claims the sender but signature is from another key", (() => { const w0 = new ethers.Wallet(KEYS[0]); return { ...signed, signature: w0.signMessageSync(signed.message) }; })(), "does not match signer");
+("signature for another tx reused", { ...signed, txHash: TXA, message: DNm.message("하늘 님", TXA) }, "signer");
+("tx not in donors.json", (() => { const w1 = new ethers.Wallet(KEYS[1]); const tx = "0x" + "d4".repeat(32); const m = DNm.message("하늘", tx); return { name: "하늘", txHash: tx, signer: w1.address, message: m, signature: w1.signMessageSync(m) }; })(), "not in donors.json");
+("garbage signature", { ...signed, signature: "0x1234" }, "bad signature");
+    for (const [nm, why] of [["http evil", "bad"], ["a@b.co", "chars"], ["call 01012345678", "digits"], ["씨발", "bad"], ["", "empty"], ["가".repeat(25), "long"], ["tel|x", "chars"]]) {
+      const w1 = new ethers.Wallet(KEYS[1]); const m = DNm.message(nm, TXB);
+      const r = verify({ name: nm, txHash: TXB, signer: w1.address, message: m, signature: w1.signMessageSync(m) }, don);
+      check(`add-donor-name rejects name "${nm.slice(0, 16)}" (${why})`, r.ok === false && r.reason.includes(why), r.reason);
+    }
+    // page-side validation: URL name blocked before the wallet is even asked
+    await dn.dpage.fill("#signName", "http://evil.example");
+    let downloaded = false; dn.dpage.once("download", () => { downloaded = true; });
+    await dn.dpage.click("#signBtn");
+    check("sign: URL-like name is refused on the page with a message, no file", /글자·숫자·공백/.test(await dn.dpage.textContent("#signMsg")) && !downloaded);
+    await dn.dpage.fill("#signName", "하늘"); await dn.dpage.fill("#signTx", "0x1234");
+    await dn.dpage.click("#signBtn");
+    check("sign: malformed tx hash refused", /거래 해시 형식/.test(await dn.dpage.textContent("#signMsg")));
+    await dn.dpage.click('[data-lang="en"]');
+    await dn.dpage.screenshot({ path: path.join(SHOTS, "donors-sign-desktop-en.png"), fullPage: true });
+    await dn.dctx.close();
+
+    // connected wallet != tx sender -> page refuses (no file)
+    const wrong = await donPage({ width: 1280, height: 900 }, ON, { donors: MOCK_DON, wallet: 0 });
+    await wrong.dpage.goto("http://127.0.0.1:4173/donate.html");
+    await wrong.dpage.waitForSelector("#donorsList li");
+    await wrong.dpage.fill("#signName", "하늘"); await wrong.dpage.fill("#signTx", TXB);
+    let wrongDl = false; wrong.dpage.once("download", () => { wrongDl = true; });
+    await wrong.dpage.click("#signBtn");
+    await wrong.dpage.waitForFunction(() => document.getElementById("signMsg").textContent.length > 0);
+    check("sign: wallet that is not the sender is refused, no file", /보낸 주소와 다릅니다/.test(await wrong.dpage.textContent("#signMsg")) && !wrongDl);
+    await wrong.dctx.close();
+
+    // empty list, load failure, no wallet
+    const emp = await donPage({ width: 1280, height: 900 }, ON, { donors: { version: 1, chainId: 8453, donations: [] } });
+    await emp.dpage.goto("http://127.0.0.1:4173/donate.html");
+    await emp.dpage.waitForFunction(() => !document.getElementById("donorsEmpty").hidden);
+    check("empty: plain 'no supporters yet' text, no list, no total", /아직 후원이 없어요\. 첫 후원자가 되어 주세요/.test(await emp.dpage.textContent("#donorsEmpty")) && (await emp.dpage.locator("#donorsList li").count()) === 0 && await emp.dpage.locator("#donorsTotal").isHidden());
+    check("no wallet in browser: sign form hidden, explanation shown", await emp.dpage.locator("#signNoWallet").isVisible() && await emp.dpage.locator("#signForm").isHidden());
+    await emp.dpage.screenshot({ path: path.join(SHOTS, "donors-empty-desktop-ko.png"), fullPage: true });
+    await emp.dpage.click('[data-lang="en"]');
+    check("empty (en): 'No supporters yet. Be the first.'", /No supporters yet\. Be the first\./.test(await emp.dpage.textContent("#donorsEmpty")));
+    await emp.dctx.close();
+    const nf = await donPage({ width: 1280, height: 900 }, ON, { donors: null });
+    await nf.dpage.goto("http://127.0.0.1:4173/donate.html");
+    await nf.dpage.waitForFunction(() => !document.getElementById("donorsFail").hidden);
+    check("load failure: shows a plain error, address/QR still shown", /불러오지 못했어요/.test(await nf.dpage.textContent("#donorsFail")) && await nf.dpage.locator("#donAddress").isVisible());
+    await nf.dctx.close();
+    const mob = await donPage({ width: 390, height: 844 }, ON, { donors: MOCK_DON, wallet: 1 });
+    await mob.dpage.goto("http://127.0.0.1:4173/donate.html");
+    await mob.dpage.waitForSelector("#donorsList li");
+    check("mobile: donor list page has no horizontal overflow", (await mob.dpage.evaluate(() => document.documentElement.scrollWidth)) <= 390);
+    await mob.dpage.screenshot({ path: path.join(SHOTS, "donors-list-mobile-390-ko.png"), fullPage: true });
+    await mob.dctx.close();
+    // the generated file in the repo itself (what is deployed)
+    const real = await donPage({ width: 1280, height: 900 }, ON);
+    await real.dpage.goto("http://127.0.0.1:4173/donate.html");
+    await real.dpage.waitForFunction(() => !document.getElementById("donorsEmpty").hidden || !document.getElementById("donorsFail").hidden || document.querySelectorAll("#donorsList li").length > 0);
+    const realJson = JSON.parse(fs.readFileSync(path.join(REG_DIR, "donors.json"), "utf8"));
+    check("committed donors.json renders consistently (empty text iff 0 donations)", realJson.donations.length === 0 ? await real.dpage.locator("#donorsEmpty").isVisible() : (await real.dpage.locator("#donorsList li").count()) > 0);
+    await real.dctx.close();
   } finally {
     if (browser) await browser.close();
     server.close();

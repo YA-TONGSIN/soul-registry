@@ -92,3 +92,9 @@ SHA-256은 `D:\openclaw-outputs\soul-chain-ieum\history\SOUL_v*.md` 파일 바�
 - 남은 일: 메인넷 배포(소유자 결정·이더 필요), 묶음 서명 제출 창구, 후원 칸(현재 꺼짐), 공개 시 noindex 해제.
 
 - **후원 페이지(기본 꺼짐)** `register/donate.html` — 자리표시. `config.js` `footer.donation`의 `enabled/address/addressType/network/assets`가 모두 유효할 때만 푸터 링크·주소·QR(로컬 생성, vendor/qrcode-generator 1.4.4 MIT)이 보임. 외부 요청 없음. e2e 91개 통과.
+
+- **후원자 명단** (`register/donate.html` 아래쪽, 2026-10-26) — 정적 `register/donors.json`을 같은 출처에서 읽어 표시(CSP `connect-src 'self'`, 외부 요청 없음). 이름은 **본인 동의(opt-in)만**, 기본은 `익명 후원자 (0x1234…abcd)`. 최근순 목록(금액·토큰·날짜·basescan 링크)과 토큰별 총합, 비어 있으면 "아직 후원이 없어요…". 한/영.
+  - **갱신(운영자)**: `node scripts/update-donors.js` → Base 메인넷을 **읽기 전용**으로 조회(USDC `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` Transfer 로그 = 공개 RPC `base-rpc.publicnode.com`(mainnet.base.org는 getLogs를 429로 막음) + 폴백, ETH = Blockscout txlist 무료 API). 트랜잭션 전송·개인키 없음. 먼지(0.01 USDC·0.00001 ETH 미만, 주소 오염 스팸)·실패 tx는 제외, 숨길 tx는 `data/donor-hide.json`(배열). 첫 실행은 최근 ~6일, 이후 `scannedTo`부터 이어서. 끝나면 `register/` 재배포. (나중에 예약 작업으로 자동화 가능.)
+  - **이름 등록 절차(후원자)**: 후원 후 같은 페이지에서 이름 + 거래 해시 입력 → 지갑이 `Ieum Ledger donor name: <이름> | tx: <txHash>`에 서명(EIP-191, 네트워크 요청 없음) → 서명 JSON 내려받기 → 문의 메일로 전송. 이름은 24자 이내, 글자·숫자·공백·`_`·`-`만(URL·연락처·욕설·긴 숫자 금지).
+  - **이름 반영(운영자)**: `node scripts/add-donor-name.js <받은.json>` — 이름 규칙, 메시지 일치, 서명자 == 해당 tx의 보낸 주소, tx가 donors.json에 있음을 오프라인으로 검증해 `data/donor-names.json`에 저장하고 donors.json에 병합(이후 update-donors.js도 같은 결과 유지). 이름을 눈으로도 확인할 것.
+  - e2e 120개 통과(목업 명단·빈 목록·외부 요청 없음·서명 검증·위조 거부).

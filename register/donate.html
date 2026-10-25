@@ -1,10 +1,10 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Display-only page: no network at all (connect-src 'none'); QR is drawn locally from vendor/qrcode-generator. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<!-- No external network: connect-src 'self' only lets this page read its own static donors.json; QR is drawn locally from vendor/qrcode-generator; name signing happens in the wallet, offline. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <title>후원 · 이음 장부 / Support · Ieum Ledger</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -58,6 +58,31 @@
         <li data-i18n="donPublic"></li>
         <li data-i18n="donNoRefund"></li>
       </ul>
+    <section id="donors" class="donors" aria-labelledby="donorsH">
+      <h2 id="donorsH" data-i18n="donorsTitle"></h2>
+      <p id="donorsTotal" class="good" hidden></p>
+      <p id="donorsEmpty" class="help" hidden></p>
+      <p id="donorsFail" class="msg err" hidden></p>
+      <ul id="donorsList" class="donorlist"></ul>
+      <p id="donorsUpdated" class="help" hidden></p>
+      <p class="help" data-i18n="donorsNote"></p>
+    </section>
+
+    <section id="signSec" class="sign" aria-labelledby="signH">
+      <h2 id="signH" data-i18n="signTitle"></h2>
+      <p data-i18n="signIntro"></p>
+      <ul class="donfacts"><li data-i18n="signRules"></li><li data-i18n="signNoName"></li></ul>
+      <div id="signNoWallet" class="box" hidden><p data-i18n="signNoWallet"></p></div>
+      <div id="signForm">
+        <label for="signName" data-i18n="signNameLbl"></label>
+        <input id="signName" type="text" maxlength="40" autocomplete="off">
+        <label for="signTx" data-i18n="signTxLbl"></label>
+        <input id="signTx" type="text" maxlength="80" autocomplete="off" placeholder="0x…" spellcheck="false">
+        <div class="row"><button type="button" id="signBtn" class="btn" data-i18n="signBtn"></button></div>
+        <p id="signMsg" class="msg" role="status" aria-live="polite"></p>
+        <p class="help"><span data-i18n="signSend"></span> <a id="signMail" href="#"></a></p>
+      </div>
+    </section>
     </div>
   </section>
 </main>
@@ -67,6 +92,7 @@
 <script src="config.js"></script>
 <script src="i18n.js"></script>
 <script src="donate-check.js"></script>
+<script src="donor-name.js"></script>
 <script src="vendor/qrcode-generator-1.4.4.js"></script>
 <script src="donate.js"></script>
 </body>

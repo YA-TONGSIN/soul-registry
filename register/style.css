@@ -79,3 +79,11 @@ select, input, textarea { max-width: 100%; min-width: 0; }
 .qr svg { display: block; width: 100%; height: auto; }
 .donfacts { margin: 1rem 0 0; padding-left: 1.3rem; } .donfacts li { margin: .3rem 0; }
 .warn p { margin: .3rem 0; }
+.donors, .sign { margin-top: 1.6rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+.donors h2, .sign h2 { font-size: 1.15rem; margin: 0 0 .5rem; }
+.donorlist { list-style: none; margin: .6rem 0; padding: 0; }
+.donorlist li { display: flex; flex-wrap: wrap; gap: .2rem .8rem; align-items: baseline; padding: .55rem 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.donorlist .dname { font-weight: 600; }
+.donorlist .damt { font-variant-numeric: tabular-nums; }
+.donorlist .dmeta { color: var(--muted, #5f574d); font-size: .92rem; }
+.sign label { display: block; margin: .8rem 0 .25rem; }
