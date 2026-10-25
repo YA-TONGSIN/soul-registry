@@ -20,13 +20,16 @@
 // ───────────────────────────────────────────────────────────────────────────
 window.IEUM_CONFIG = {
   defaultNetwork: "baseSepolia",
-  // Footer: switch with enabled. contact/support stay empty until the owner confirms them
-  // (do NOT put an email or bank account here before that). Empty string = slot hidden.
+  // Footer (confirmed by the owner 2026-10-25 21:18). enabled=false hides the whole footer extra.
+  // donation: slot only, off by default; when off nothing is shown. Do NOT put a link/bank account
+  // here until the owner provides one.
   footer: {
     enabled: true,
     maker: { ko: "만든 사람: 신운종 · 이음(Ieum)", en: "Made by Wunjong Shin · Ieum" },
-    contact: { ko: "", en: "" },
-    support: { ko: "", en: "" },
+    contactLabel: { ko: "문의", en: "Contact" },
+    contactEmail: "dkakrptehsrk@gmail.com",
+    free: { ko: "이 장부는 무료입니다.", en: "This ledger is free." },
+    donation: { enabled: false, label: { ko: "", en: "" }, url: "" },
   },
   allowMainnet: false, // keep false until the owner approves a public launch
   networks: {

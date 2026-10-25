@@ -87,11 +87,18 @@
     const f = CFG.footer;
     $("footerExtra").hidden = !(f && f.enabled);
     if (!(f && f.enabled)) return;
-    for (const [id, key] of [["footMaker", "maker"], ["footContact", "contact"], ["footSupport", "support"]]) {
-      const v = (f[key] && f[key][lang]) || "";
-      $(id).textContent = v;
-      $(id).hidden = !v;
+    $("footMaker").textContent = (f.maker && f.maker[lang]) || "";
+    $("footFree").textContent = (f.free && f.free[lang]) || "";
+    const cEl = $("footContact");
+    cEl.hidden = !f.contactEmail;
+    if (f.contactEmail) {
+      const a = el("a", { href: "mailto:" + f.contactEmail, text: f.contactEmail });
+      cEl.replaceChildren(document.createTextNode(((f.contactLabel && f.contactLabel[lang]) || "") + ": "), a);
     }
+    const d = f.donation, dEl = $("footDonation");
+    const dOn = !!(d && d.enabled && d.url && /^https:\/\//.test(d.url));
+    dEl.hidden = !dOn;
+    if (dOn) dEl.replaceChildren(el("a", { href: d.url, text: (d.label && d.label[lang]) || d.url, rel: "noopener" }));
   }
   function fillNetSelect() {
     const sel = $("net");
