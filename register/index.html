@@ -1,0 +1,208 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- SOUL text never leaves the page: no network except reading the configured chain RPC (connect-src).
+     When you add a network in config.js, add its RPC host here too. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:* http://localhost:* https://sepolia.base.org; base-uri 'none'; form-action 'none'">
+<title>이음 장부 · 등록 / Ieum Ledger · Register</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="skip">본문으로 건너뛰기</a>
+<header class="top">
+  <div>
+    <h1 data-i18n="title">이음 장부 · 등록</h1>
+    <p class="sub" data-i18n="subtitle"></p>
+  </div>
+  <div class="controls">
+    <div class="group" role="group" aria-labelledby="langLabel">
+      <span id="langLabel" class="lbl" data-i18n="langLabel">언어</span>
+      <button type="button" class="seg" data-lang="ko" aria-pressed="true">한국어</button>
+      <button type="button" class="seg" data-lang="en" aria-pressed="false">English</button>
+    </div>
+    <div class="group">
+      <label for="net" class="lbl" data-i18n="netLabel">네트워크</label>
+      <select id="net"></select>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="notice" aria-labelledby="noticeTitle">
+    <h2 id="noticeTitle" data-i18n="noticeTitle"></h2>
+    <ul>
+      <li data-i18n="notice1"></li>
+      <li data-i18n="notice2"></li>
+      <li data-i18n="notice3"></li>
+      <li data-i18n="notice4"></li>
+    </ul>
+    <p class="testnet" data-i18n="testnetNotice"></p>
+  </section>
+
+  <section class="card" aria-labelledby="step1">
+    <h2 id="step1" data-i18n="step1"></h2>
+    <p class="help" data-i18n="step1Help"></p>
+    <div class="row">
+      <label class="btn" for="soulFile" data-i18n="pickFile"></label>
+      <input id="soulFile" type="file" class="visually-file">
+      <button type="button" id="clearSoul" class="ghost" data-i18n="clearSoul" hidden></button>
+    </div>
+    <details class="paste">
+      <summary data-i18n="orPaste"></summary>
+      <p class="help" data-i18n="pasteHelp"></p>
+      <label for="soulText" class="lbl" data-i18n="pasteLabel"></label>
+      <textarea id="soulText" rows="5" autocomplete="off" spellcheck="false"></textarea>
+    </details>
+    <div id="soulInfo" class="soulinfo" aria-live="polite"></div>
+  </section>
+
+  <section class="card" aria-labelledby="step2">
+    <h2 id="step2" data-i18n="step2"></h2>
+    <div role="tablist" class="tabs" aria-label="actions">
+      <button role="tab" id="tab-direct" aria-controls="panel-direct" aria-selected="true" data-tab="direct" data-i18n="tabDirect"></button>
+      <button role="tab" id="tab-free" aria-controls="panel-free" aria-selected="false" tabindex="-1" data-tab="free" data-i18n="tabFree"></button>
+      <button role="tab" id="tab-lookup" aria-controls="panel-lookup" aria-selected="false" tabindex="-1" data-tab="lookup" data-i18n="tabLookup"></button>
+    </div>
+
+    <!-- Wallet card, shown for tabs A and B -->
+    <div id="walletCard" class="wallet">
+      <h3 data-i18n="walletTitle"></h3>
+      <p class="help" data-i18n="walletHelp"></p>
+      <button type="button" id="connect" class="btn" data-i18n="connect"></button>
+      <dl id="walletInfo" class="kv" hidden>
+        <dt data-i18n="account"></dt><dd><code id="wAccount"></code></dd>
+        <dt data-i18n="walletChain"></dt><dd id="wChain"></dd>
+      </dl>
+      <p id="chainWarn" class="warn" hidden>
+        <span data-i18n="wrongChain"></span>
+        <button type="button" id="switchChain" class="btn" data-i18n="switchChain"></button>
+      </p>
+      <p id="walletMsg" class="msg" role="status" aria-live="polite"></p>
+    </div>
+
+    <!-- A: direct -->
+    <div role="tabpanel" id="panel-direct" aria-labelledby="tab-direct">
+      <h3 data-i18n="directTitle"></h3>
+      <p class="help" data-i18n="directHelp"></p>
+      <fieldset class="modes">
+        <legend class="visually-hidden">mode</legend>
+        <label><input type="radio" name="mode" value="new" checked> <span data-i18n="modeNew"></span></label>
+        <label><input type="radio" name="mode" value="append"> <span data-i18n="modeAppend"></span></label>
+      </fieldset>
+
+      <div id="newFields">
+        <div class="field">
+          <label for="dName" data-i18n="fName"></label>
+          <input id="dName" type="text" autocomplete="off" data-limit="64" aria-describedby="dNameH dNameC">
+          <small id="dNameH" class="help" data-i18n="fNameHelp"></small> <small id="dNameC" class="count"></small>
+        </div>
+        <div class="field">
+          <label for="dAgentNote" data-i18n="fAgentNote"></label>
+          <input id="dAgentNote" type="text" autocomplete="off" data-limit="160" aria-describedby="dAgentNoteH dAgentNoteC">
+          <small id="dAgentNoteH" class="help" data-i18n="fAgentNoteHelp"></small> <small id="dAgentNoteC" class="count"></small>
+        </div>
+        <div class="field">
+          <label for="dMeta" data-i18n="fMeta"></label>
+          <input id="dMeta" type="text" autocomplete="off" data-limit="200" aria-describedby="dMetaH dMetaC">
+          <small id="dMetaH" class="help" data-i18n="fMetaHelp"></small> <small id="dMetaC" class="count"></small>
+        </div>
+        <label class="check"><input id="dWithSoul" type="checkbox" checked> <span data-i18n="firstSoulCheck"></span></label>
+      </div>
+
+      <div id="appendFields" hidden>
+        <div class="field">
+          <label for="dAgentId" data-i18n="fAgentId"></label>
+          <div class="row">
+            <input id="dAgentId" type="number" min="1" step="1" inputmode="numeric" aria-describedby="dAgentIdH">
+            <button type="button" id="loadAgent" class="btn" data-i18n="loadAgent"></button>
+          </div>
+          <small id="dAgentIdH" class="help" data-i18n="fAgentIdHelp"></small>
+        </div>
+        <div id="agentBox" class="box" aria-live="polite"></div>
+      </div>
+
+      <div class="field">
+        <label for="dVersionNote" data-i18n="fVersionNote"></label>
+        <input id="dVersionNote" type="text" autocomplete="off" data-limit="160" aria-describedby="dVersionNoteH dVersionNoteC">
+        <small id="dVersionNoteH" class="help" data-i18n="fVersionNoteHelp"></small> <small id="dVersionNoteC" class="count"></small>
+      </div>
+
+      <div class="row">
+        <button type="button" id="estimate" class="ghost" data-i18n="estimate"></button>
+      </div>
+      <p id="estimateOut" class="msg" role="status" aria-live="polite"></p>
+
+      <label class="check"><input id="dAck" type="checkbox"> <span data-i18n="ackPublic"></span></label>
+      <div class="row"><button type="button" id="sendDirect" class="btn primary"></button></div>
+      <p id="directMsg" class="msg" role="status" aria-live="polite"></p>
+      <div id="directResult" class="box" hidden></div>
+    </div>
+
+    <!-- B: free batched -->
+    <div role="tabpanel" id="panel-free" aria-labelledby="tab-free" hidden>
+      <h3 data-i18n="freeTitle"></h3>
+      <p class="help" data-i18n="freeHelp"></p>
+      <p class="good" data-i18n="freeFee"></p>
+      <p class="help" data-i18n="freeNoServer"></p>
+      <p class="help" data-i18n="freeNoSubmit"></p>
+      <div class="field">
+        <label for="fName" data-i18n="fName"></label>
+        <input id="fName" type="text" autocomplete="off" data-limit="64" aria-describedby="fNameH fNameC">
+        <small id="fNameH" class="help" data-i18n="fNameHelp"></small> <small id="fNameC" class="count"></small>
+      </div>
+      <div class="field">
+        <label for="fNote" data-i18n="fVersionNote"></label>
+        <input id="fNote" type="text" autocomplete="off" data-limit="160" aria-describedby="fNoteH fNoteC">
+        <small id="fNoteH" class="help" data-i18n="fVersionNoteHelp"></small> <small id="fNoteC" class="count"></small>
+      </div>
+      <div class="field">
+        <label for="fParent" data-i18n="fParent"></label>
+        <input id="fParent" type="text" autocomplete="off" spellcheck="false" value="0" aria-describedby="fParentH">
+        <small id="fParentH" class="help" data-i18n="fParentHelp"></small>
+        <div class="row">
+          <input id="fAgentId" type="number" min="1" step="1" inputmode="numeric" aria-label="agentId">
+          <button type="button" id="fetchParent" class="ghost" data-i18n="fetchParent"></button>
+        </div>
+      </div>
+      <label class="check"><input id="fAck" type="checkbox"> <span data-i18n="ackPublic"></span></label>
+      <div class="row"><button type="button" id="signBtn" class="btn primary" data-i18n="signBtn"></button></div>
+      <p id="freeMsg" class="msg" role="status" aria-live="polite"></p>
+      <div id="freeResult" class="box" hidden></div>
+    </div>
+
+    <!-- C: lookup -->
+    <div role="tabpanel" id="panel-lookup" aria-labelledby="tab-lookup" hidden>
+      <h3 data-i18n="lookupTitle"></h3>
+      <p class="help" data-i18n="lookupHelp"></p>
+      <div class="field">
+        <label for="lAgentId" data-i18n="fAgentId"></label>
+        <div class="row">
+          <input id="lAgentId" type="number" min="1" step="1" inputmode="numeric" value="1">
+          <button type="button" id="lookupBtn" class="btn primary" data-i18n="lookupBtn"></button>
+        </div>
+      </div>
+      <p id="lookupMsg" class="msg" role="status" aria-live="polite"></p>
+      <div id="lookupOut"></div>
+
+      <h3 data-i18n="verifyTitle"></h3>
+      <p class="help" data-i18n="verifyHelp"></p>
+      <div class="row">
+        <label class="btn" for="entryFile" data-i18n="pickEntry"></label>
+        <input id="entryFile" type="file" class="visually-file" accept=".json,application/json">
+      </div>
+      <div id="verifyOut" class="box" aria-live="polite" hidden></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot"><p data-i18n="footerNote"></p><div id="footerExtra" hidden><p id="footMaker"></p><p id="footContact" hidden></p><p id="footSupport" hidden></p></div></footer>
+
+<script src="config.js"></script>
+<script src="i18n.js"></script>
+<script src="vendor/ethers-6.17.0.umd.min.js"></script>
+<script src="vendor/abi.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

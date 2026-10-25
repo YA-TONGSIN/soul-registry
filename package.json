@@ -1,25 +1,24 @@
 {
-    "name":  "soul-registry",
-    "version":  "1.0.0",
-    "description":  "SOUL Registry prototype (hash-only public ledger for AI SOUL history). Local/testnet only.",
-    "main":  null,
-    "scripts":  {
-                    "test":  "hardhat test",
-                    "deploy:local":  "hardhat run scripts/deploy.js --network localhost",
-                    "deploy:baseSepolia":  "hardhat run scripts/deploy.js --network baseSepolia",
-                    "demo:ieum":  "hardhat run scripts/demo-ieum.js --network localhost",
-                    "demo:batch":  "hardhat run scripts/demo-batch.js --network localhost",
-                    "history":  "hardhat run scripts/history.js --network localhost",
-                    "estimate:cost":  "node scripts/estimate-cost.js"
-                },
-    "keywords":  [
-
-                 ],
-    "author":  "",
-    "license":  "MIT",
-    "type":  "commonjs",
-    "devDependencies":  {
-                            "@nomicfoundation/hardhat-toolbox":  "^5.0.0",
-                            "hardhat":  "^2.29.1"
-                        }
+    "name": "soul-registry",
+    "version": "1.0.0",
+    "description": "SOUL Registry prototype (hash-only public ledger for AI SOUL history). Local/testnet only.",
+    "main": null,
+    "scripts": {
+        "test": "hardhat test",
+        "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+        "deploy:baseSepolia": "hardhat run scripts/deploy.js --network baseSepolia",
+        "demo:ieum": "hardhat run scripts/demo-ieum.js --network localhost",
+        "demo:batch": "hardhat run scripts/demo-batch.js --network localhost",
+        "history": "hardhat run scripts/history.js --network localhost",
+        "estimate:cost": "node scripts/estimate-cost.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "type": "commonjs",
+    "devDependencies": {
+        "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+        "hardhat": "^2.29.1",
+        "playwright-core": "^1.64.1"
+    }
 }

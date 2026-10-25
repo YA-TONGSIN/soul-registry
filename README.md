@@ -78,3 +78,6 @@ SHA-256은 `D:\openclaw-outputs\soul-chain-ieum\history\SOUL_v*.md` 파일 바�
 - RPC: `https://sepolia.base.org` (공개, 속도 제한 있음). 바꾸려면 `$env:BASE_SEPOLIA_RPC`.
 - 테스트 지갑: `0x4a194813bBb6A68EB4CF02Efde25d56368dB0a30` (키: `D:\openclaw-backup\.soul-registry-testnet.key`, 숨김, **테스트넷 전용**, 저장소 밖)
 - 잔액 0 → 배포 스크립트가 거부함. faucet에서 받은 뒤 `npm run deploy:baseSepolia`.
+
+## 등록 페이지 (register/)
+정적 페이지(ethers 6.17.0 로컬 번들). 설정은 register/config.js 한 파일(localhost·baseSepolia, mainnet은 주석·비활성, footer 켜기/끄기). 검증: `node test/e2e-register.js` (로컬 hardhat 노드 + 헤드리스 Edge + EIP-1193 목 지갑). 스크린샷: docs/register/.
