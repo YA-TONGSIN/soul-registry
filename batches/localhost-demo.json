@@ -1,0 +1,33 @@
+{
+  "network": "localhost",
+  "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "root": "0xe47f6064c87bacb05746bd880f7411049fdf2f300767691c0002e94ed2cf2001",
+  "entries": [
+    {
+      "owner": "0xb2125937FD0E8Da5f0EBedBc1145a9bb021cf2dd",
+      "agentName": "Demo-Aurora",
+      "soulHash": "0x489b4aa879589ebb9ff41b289aaf06098f7e6cfb9b276b614ad8d6c5d500bb7e",
+      "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "note": "virtual demo agent A",
+      "signedAt": "1792886761",
+      "signature": "0x288c8b64ccaf8ee2656ac92393d6d89786c86fd25b837193de53347b228cf1de4a2f81ab517a043c2fcf7b611f07d679858afe4ed9337ad7df5d06ecbd1059e01c",
+      "leaf": "0x10fcee783bcdeb88023e355ff012f2a36ba15870ded012f88e1ced88777638d1",
+      "proof": [
+        "0x868e5bf0fbbe6ed6b7db270fb579897fa8b9596cd568a5dca2298d8e3f6694da"
+      ]
+    },
+    {
+      "owner": "0xa5C0646017E87322950d9E3871BDd2f74EEC23B3",
+      "agentName": "Demo-Birch",
+      "soulHash": "0xc0656788cfe6f4754018f1ec13da43bb264b73ecbf114538f9a8be160c9e7c43",
+      "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "note": "virtual demo agent B",
+      "signedAt": "1792886761",
+      "signature": "0x99ad3dfed99ea16bf2f13505817866052e4ffdc5366082126f594ae3ddc2d81b2cb837a5f59ad79b8230826193b6ca48f07b244b1a56cbe01929feed77c358711c",
+      "leaf": "0x868e5bf0fbbe6ed6b7db270fb579897fa8b9596cd568a5dca2298d8e3f6694da",
+      "proof": [
+        "0x10fcee783bcdeb88023e355ff012f2a36ba15870ded012f88e1ced88777638d1"
+      ]
+    }
+  ]
+}

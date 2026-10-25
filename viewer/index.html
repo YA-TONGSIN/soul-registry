@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOUL Registry 조회 (로컬 체인)</title>
+<style>
+  body { font-family: system-ui, "Malgun Gothic", sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  input { padding: .4rem; font-size: 1rem; }
+  input.addr { width: 26rem; }
+  button { padding: .4rem .9rem; font-size: 1rem; }
+  .rec { border-left: 3px solid #6a5acd; padding: .3rem .8rem; margin: .8rem 0; }
+  code { font-size: .82rem; word-break: break-all; }
+  .ok { color: #1a7f37; } .bad { color: #c62828; } .muted { color: #777; }
+</style>
+</head>
+<body>
+<h1>SOUL Registry 조회</h1>
+<p class="muted">로컬 테스트 체인 전용 시제품. 체인에는 해시·이름·날짜·짧은 한 줄만 있습니다.</p>
+<p>
+  RPC <input id="rpc" class="addr" value="http://127.0.0.1:8545"><br>
+  컨트랙트 <input id="addr" class="addr" value="0x5FbDB2315678afecb367f032d93F642f64180aa3"><br>
+  agentId <input id="aid" type="number" min="1" value="1" style="width:5rem">
+  <button id="go">조회</button>
+</p>
+<div id="out"></div>
+
+<script src="ethers.umd.min.js"></script>
+<script src="abi.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const when = (t) => new Date(Number(t) * 1000).toISOString().replace("T", " ").slice(0, 19) + " UTC";
+
+async function load() {
+  const out = $("out");
+  out.textContent = "불러오는 중…";
+  try {
+    const provider = new ethers.JsonRpcProvider($("rpc").value);
+    const reg = new ethers.Contract($("addr").value, window.SOUL_REGISTRY_ABI, provider);
+    const id = BigInt($("aid").value);
+    const a = await reg.getAgent(id);
+    const [hist, valid] = await Promise.all([reg.getHistory(id), reg.verifyChain(id)]);
+    let html = `<h2>#${a.id} ${esc(a.name)}</h2>
+      <p>${esc(a.note)}<br><span class="muted">owner <code>${a.owner}</code> · 등록 ${when(a.createdAt)}</span></p>
+      <p>기록 ${a.recordCount}개 · 체인 검증 <b class="${valid ? "ok" : "bad"}">${valid ? "통과" : "실패"}</b></p>`;
+    hist.forEach((r, i) => {
+      html += `<div class="rec"><b>v${i + 1}</b> <span class="muted">${when(r.timestamp)}</span><br>
+        ${esc(r.note)}<br>
+        soul <code>${r.soulHash}</code><br>
+        parent <code>${r.parentHash}</code></div>`;
+    });
+    out.innerHTML = html;
+  } catch (e) {
+    out.innerHTML = `<p class="bad">조회 실패: ${esc(e.shortMessage || e.message)}</p>`;
+  }
+}
+$("go").addEventListener("click", load);
+if (new URLSearchParams(location.search).has("auto")) load();
+</script>
+</body>
+</html>

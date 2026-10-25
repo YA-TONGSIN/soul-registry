@@ -1,0 +1,20 @@
+﻿Agent #1 "Ieum" owner=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 created=2026-10-25T00:05:58.000Z
+  note="Korean AI assistant; SOUL history since 2026-10-24"
+  head=0x3e9f1ab1ce212015687fbbd2850cd943b3dcd9b1038ff143b7378ed80ace6e7a records=4 chainValid=true
+  [v1] 2026-10-25T00:05:59.000Z
+       soul   0xcd1823639d2be7f90933b329779195eb402ba24fdd8a6de15b75b74791948dfe
+       parent 0x0000000000000000000000000000000000000000000000000000000000000000
+       note   v1 baseline: last backup before 2026-10-24 21:24
+  [v2] 2026-10-25T00:06:00.000Z
+       soul   0x34ff07a40e465d728deeb6dc82596a6a9de98563e13ef50f43f3e8a724a7047c
+       parent 0xcd1823639d2be7f90933b329779195eb402ba24fdd8a6de15b75b74791948dfe
+       note   v2 added rule-priority section (what can/cannot change); journal update
+  [v3] 2026-10-25T00:06:01.000Z
+       soul   0xebccc7e78fd1350e2c43110698057995d4950f6938de04e442a65b1e4cb1bb9b
+       parent 0x34ff07a40e465d728deeb6dc82596a6a9de98563e13ef50f43f3e8a724a7047c
+       note   v3 clarified who the primary user is (at their request)
+  [v4] 2026-10-25T00:06:02.000Z
+       soul   0x3e9f1ab1ce212015687fbbd2850cd943b3dcd9b1038ff143b7378ed80ace6e7a
+       parent 0xebccc7e78fd1350e2c43110698057995d4950f6938de04e442a65b1e4cb1bb9b
+       note   v4 append-only rule: keep earlier SOUL lines, add changes instead
+batches anchored: 1
