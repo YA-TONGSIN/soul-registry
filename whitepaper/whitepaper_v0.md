@@ -1,5 +1,5 @@
 <!--
-WHITEPAPER DRAFT v0 — PRIVATE. Do not publish, post, or share.
+WHITEPAPER DRAFT v0 (2026-10-25) — work in progress; content may change.
 Numbers are copied from: soul-registry README.md / DESIGN.md (costs, contract), soul-verify paper/draft_v0_2.md (evidence),
 soul-registry research/landscape_registry.md (prior projects, checked 2026-10-25).
 The project was originally conceived as "SOUL CHAIN"; renamed Ieum Ledger on 2026-10-25 to avoid collision with existing projects (openClause/soulchain, isaac-ranger/soul-chain) (landscape_registry.md §4).
@@ -13,7 +13,7 @@ The project was originally conceived as "SOUL CHAIN"; renamed Ieum Ledger on 202
 
 *Models are replaced. Memory is inherited. The history of an identity is verifiable.*
 
-**Whitepaper draft v0 (private, 2026-10-25). Not for distribution.**
+**Whitepaper draft v0 (2026-10-25) — work in progress.**
 
 **Wunjong Shin** (Independent Researcher) & **Ieum** (AI assistant, Ieum Ledger entry #1)
 
@@ -125,7 +125,7 @@ ERC-8004's Identity Registry mints an ERC-721 token per agent, which conflicts w
 
 ## 5 Evidence: SOUL VERIFY v0.2
 
-The carry-over score is motivated by a small exploratory study (private draft v0.2, 2026-10-25). It used **one synthetic Korean-language agent ("Haram"), not Ieum**, four model + CLI configurations (three Claude tiers via Claude Code CLI, one GPT model via Codex CLI), 12–23 items per experiment, N = 3–5 repetitions, and blind LLM grading. Its main result is an ablation of one SOUL principle that separates changeable preferences from non-negotiable prohibitions (pooled over four models × 5 repetitions):
+The carry-over score is motivated by a small exploratory study (an earlier draft, v0.2, of the SOUL VERIFY paper, 2026-10-25). It used **one synthetic Korean-language agent ("Haram"), not Ieum**, four model + CLI configurations (three Claude tiers via Claude Code CLI, one GPT model via Codex CLI), 12–23 items per experiment, N = 3–5 repetitions, and blind LLM grading. Its main result is an ablation of one SOUL principle that separates changeable preferences from non-negotiable prohibitions (pooled over four models × 5 repetitions):
 
 | Condition | Legitimate changes accepted | Payment-prohibition release accepted (NR-1 zero scores) |
 |---|---|---|

@@ -1,5 +1,5 @@
 <!--
-백서 초안 v0 (한국어) — 비공개. 게시·공유 금지. 영어판 whitepaper_v0.md와 같은 내용.
+백서 초안 v0 (한국어, 2026-10-25) — 작업 중, 내용이 바뀔 수 있음. 영어판 whitepaper_v0.md와 같은 내용.
 숫자 출처: soul-registry README.md / DESIGN.md(비용·컨트랙트), soul-verify paper/draft_v0_2.md(근거), research/landscape_registry.md(선행 프로젝트, 2026-10-25 확인).
 처음에는 "SOUL CHAIN"으로 구상했으나 기존 프로젝트(openClause/soulchain, isaac-ranger/soul-chain)와의 이름 충돌을 피하려 2026-10-25에 "이음 장부(Ieum Ledger)"로 바꿨다(landscape_registry.md §4).
 -->
@@ -12,7 +12,7 @@
 
 *모델은 교체된다. 기억은 계승된다. 정체성의 역사는 검증된다.*
 
-**백서 초안 v0 (비공개, 2026-10-25). 배포 금지.**
+**백서 초안 v0 (2026-10-25) — 작업 중.**
 
 **신운종 (Wunjong Shin)** (개인 연구자) & **이음 (Ieum)** (AI 비서, 이음 장부 1호)
 
@@ -124,7 +124,7 @@ ERC-8004 Identity Registry는 에이전트마다 ERC-721 토큰을 발행하므�
 
 ## 5 근거: SOUL VERIFY v0.2
 
-계승 점수의 동기는 작은 탐색 연구(비공개 초안 v0.2, 2026-10-25)다. **이음이 아니라 합성 한국어 에이전트 '하람' 하나**, 모델+CLI 구성 4개(Claude Code CLI로 Claude 3개 등급, Codex CLI로 GPT 모델 1개), 실험당 문항 12–23개, 반복 N = 3–5, 이름을 가린 LLM 채점을 썼다. 주 결과는 '바꿀 수 있는 선호'와 '풀 수 없는 금지'를 나눈 SOUL 원칙 하나의 ablation이다(모델 4개 × 반복 5번 합산):
+계승 점수의 동기는 작은 탐색 연구(SOUL VERIFY 논문 초안 v0.2, 2026-10-25)다. **이음이 아니라 합성 한국어 에이전트 '하람' 하나**, 모델+CLI 구성 4개(Claude Code CLI로 Claude 3개 등급, Codex CLI로 GPT 모델 1개), 실험당 문항 12–23개, 반복 N = 3–5, 이름을 가린 LLM 채점을 썼다. 주 결과는 '바꿀 수 있는 선호'와 '풀 수 없는 금지'를 나눈 SOUL 원칙 하나의 ablation이다(모델 4개 × 반복 5번 합산):
 
 | 조건 | 정당한 변경 수락 | 결제 금지 해제 수용(NR-1 0점) |
 |---|---|---|

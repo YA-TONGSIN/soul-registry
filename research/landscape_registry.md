@@ -1,4 +1,4 @@
-# SOUL Registry — 선행 프로젝트 정밀 비교 (비공개)
+# SOUL Registry — 선행 프로젝트 정밀 비교
 
 - 조사일: 2026-10-25 (KST), 조사자: 하위 에이전트(Opus 5.5). 읽기 전용(가입·게시·결제 없음).
 - 방법: 각 사이트·저장소를 web_fetch / GitHub REST API(비로그인) / npm registry API로 직접 열람. 웹 검색(DuckDuckGo)은 대부분 오류가 나서 이름 충돌 검사는 GitHub·npm·PyPI 검색으로 대신함.

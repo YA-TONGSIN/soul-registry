@@ -40,7 +40,11 @@
     $("qrBox").replaceChildren(svg);
   }
 
+  // status lines (sign / copy) are kept as functions so a language switch re-translates what is already shown
+  const live = {};
+  function setLive(id, cls, fn) { const m = $(id); live[id] = fn; m.className = "msg" + (cls ? " " + cls : ""); m.textContent = fn ? fn() : ""; }
   function render() {
+    for (const id of Object.keys(live)) if (live[id]) $(id).textContent = live[id]();
     document.documentElement.lang = lang;
     document.title = t("donTitle");
     document.querySelectorAll("[data-i18n]").forEach((n) => (n.textContent = t(n.dataset.i18n)));
@@ -119,7 +123,7 @@
   }
 
   // ── opt-in name: sign "Ieum Ledger donor name: <name> | tx: <hash>" in the wallet (EIP-191 personal_sign), offer the JSON for download ──
-  function setSignMsg(key, cls, vars) { const m = $("signMsg"); m.className = "msg" + (cls ? " " + cls : ""); m.textContent = key ? t(key, vars) : ""; }
+  function setSignMsg(key, cls, vars) { setLive("signMsg", cls, key ? () => t(key, vars) : null); }
   async function sign() {
     const c = DN.check($("signName").value);
     if (!c.ok) return setSignMsg("signErr_" + c.reason, "err");
@@ -138,11 +142,10 @@
       a.href = url; a.download = "ieum-donor-name-" + tx.slice(2, 10) + ".json";
       document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 5000);
-      const m = $("signMsg"); m.className = "msg ok";
-      m.textContent = t("signDone") + (hit.length ? "" : " " + t("signNotListed"));
+      setLive("signMsg", "ok", () => t("signDone") + (hit.length ? "" : " " + t("signNotListed")));
     } catch (e) {
-      const m = $("signMsg"); m.className = "msg err";
-      m.textContent = e && (e.code === 4001 || e.code === "ACTION_REJECTED") ? t("signRejected") : String((e && e.message) || e).slice(0, 200);
+      const rejected = e && (e.code === 4001 || e.code === "ACTION_REJECTED"), raw = String((e && e.message) || e).slice(0, 200);
+      setLive("signMsg", "err", () => (rejected ? t("signRejected") : raw));
     }
   }
   async function copy() {
@@ -156,10 +159,9 @@
       let ok = false;
       try { ok = document.execCommand("copy"); } catch (e2) { ok = false; }
       ta.remove();
-      if (!ok) { msg.className = "msg err"; msg.textContent = t("donCopyFail"); return; }
+      if (!ok) { setLive("copyMsg", "err", () => t("donCopyFail")); return; }
     }
-    msg.className = "msg ok";
-    msg.textContent = t("donCopied");
+    setLive("copyMsg", "ok", () => t("donCopied"));
   }
 
   document.querySelectorAll(".seg").forEach((b) => b.addEventListener("click", () => {

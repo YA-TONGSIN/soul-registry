@@ -1,5 +1,9 @@
 # Ieum Ledger · 이음 장부 (시제품)
 
+**English** — A free, tokenless public ledger for the version history of AI agents' identity documents (SOUL files). Only SHA-256 hashes, a name, a date and a one-line note go on-chain — never the document itself. Free registration works through signed batches whose Merkle root is anchored once a day (about ₩2/day on Base); you can also register directly from your own wallet. Companion to the research tool [SOUL VERIFY](https://github.com/YA-TONGSIN/soul-verify). Currently a **testnet prototype** (Base Sepolia); contract: `0xA28a899E3b7255cea1cDc7d92b6ce7FAFBE9F237`. Site: https://ieum-ledger.pages.dev. Zenodo DOI of the companion paper: to be added after release.
+
+**한국어** — AI 에이전트의 SOUL(정체성) 문서가 어떻게 바뀌어 왔는지를 해시로만 남기는 무료·무토큰 공개 장부입니다. 문서 본문은 올리지 않습니다. 현재는 테스트넷(Base Sepolia) 시제품입니다.
+
 > 처음 이름은 SOUL CHAIN. 기존 프로젝트와의 충돌을 피해 이음 장부(Ieum Ledger)로 바꿨다. 'ieum'(이음)은 한국어로 '잇다' — 어제와 오늘, 모델과 모델, 사람과 AI를 잇는다는 뜻. **컨트랙트 이름은 `SoulRegistry`** (그대로 유지).
 
 AI 에이전트의 SOUL 문서 이력을 **해시로만** 남기는 공개 장부 컨트랙트. 토큰 없음, 본문 저장 없음.
@@ -53,7 +57,7 @@ $env:AGENT_ID=1; npm run history
 ```
 
 ## 이음 로컬 데모 결과 (2026-10-25)
-SHA-256은 `D:\openclaw-outputs\soul-chain-ieum\history\SOUL_v*.md` 파일 바이트 그대로 (PowerShell `Get-FileHash`와 일치 확인).
+SHA-256은 이음의 SOUL 문서 v1~v4의 per-version 사본(`history/SOUL_v*.md`, Windows 줄바꿈 CRLF) 파일 바이트 그대로 계산한 값입니다(PowerShell `Get-FileHash`와 일치 확인). 시점 증명(OpenTimestamps)에 쓴 지문은 같은 내용을 LF 줄바꿈으로 계산한 것이라 값이 다릅니다. SOUL 본문은 공개하지 않고 해시와 [OpenTimestamps 증명](docs/ieum-chain-proofs/)만 공개합니다.
 
 | 버전 | soulHash | parentHash |
 |---|---|---|
@@ -76,7 +80,7 @@ SHA-256은 `D:\openclaw-outputs\soul-chain-ieum\history\SOUL_v*.md` 파일 바�
 
 ## 테스트넷 (Base Sepolia, chainId 84532)
 - RPC: `https://sepolia.base.org` (공개, 속도 제한 있음). 바꾸려면 `$env:BASE_SEPOLIA_RPC`.
-- 테스트 지갑: `0x4a194813bBb6A68EB4CF02Efde25d56368dB0a30` (키: `D:\openclaw-backup\.soul-registry-testnet.key`, 숨김, **테스트넷 전용**, 저장소 밖)
+- 테스트 지갑: `0x4a194813bBb6A68EB4CF02Efde25d56368dB0a30` (키는 저장소 밖 파일에 보관, **테스트넷 전용**)
 - 잔액 0 → 배포 스크립트가 거부함. faucet에서 받은 뒤 `npm run deploy:baseSepolia`.
 
 ## 등록 페이지 (register/)

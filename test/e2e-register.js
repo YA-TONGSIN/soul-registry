@@ -590,6 +590,7 @@ async function main() {
     await dn.dpage.click("#signBtn");
     check("sign: malformed tx hash refused", /거래 해시 형식/.test(await dn.dpage.textContent("#signMsg")));
     await dn.dpage.click('[data-lang="en"]');
+    check("sign: after switching to EN the shown tx-hash error is re-translated", /transaction hash format/i.test(await dn.dpage.textContent("#signMsg")) && !/[가-힣]/.test(await dn.dpage.textContent("#signMsg")));
     await dn.dpage.screenshot({ path: path.join(SHOTS, "donors-sign-desktop-en.png"), fullPage: true });
     await dn.dctx.close();
 
