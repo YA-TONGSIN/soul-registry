@@ -1,0 +1,5 @@
+IEUM SOUL record
+commit: 5c4120fc1869fe8ae61b49b2ec03f28e07589116
+soul_sha256: 47b9dcfd48950363090c1b0a7c674dc6e682d1143bd9614d48d2d34b5e146e0c
+reason: 백업본(10-24 21:24 이전 마지막 버전). 이음 키트·고쳐 주신 것 포함
+recorded: 2026-10-25T06:59:48.1497164+09:00

@@ -29,4 +29,5 @@ references:
       - family-names: Shin
         given-names: Wunjong
     year: 2026
-    url: "https://github.com/YA-TONGSIN/soul-verify"
+    doi: "10.5281/zenodo.23653775"
+    url: "https://doi.org/10.5281/zenodo.23653775"

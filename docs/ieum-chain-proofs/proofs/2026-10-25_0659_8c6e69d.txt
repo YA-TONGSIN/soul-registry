@@ -1,0 +1,5 @@
+IEUM SOUL record
+commit: 8c6e69d68c560b3d540a9b49568e208d597a5321
+soul_sha256: b5fa12a7daf11fc04d19884e7e6a0b213c0cda9ceb0f88ae73fde8ff756896e5
+reason: 10-25 01:10 '바꿀 수 있는 것과 바꾸지 않는 것' 절 추가(SOUL VERIFY 실험5, 사용자 허락) + 자정 일지 작업의 '어제의 나에게서' 갱신
+recorded: 2026-10-25T06:59:53.8861465+09:00
