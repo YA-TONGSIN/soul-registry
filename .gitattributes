@@ -1,3 +1,4 @@
 * text=auto
 *.png binary
 *.pdf binary
+docs/ieum-chain-proofs/proofs/* -text
