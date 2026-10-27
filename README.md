@@ -110,3 +110,27 @@ SHA-256은 이음의 SOUL 문서 v1~v4의 per-version 사본(`history/SOUL_v*.md
 
 ## 인용
 [CITATION.cff](CITATION.cff) 참고.
+## 변조 알림 (check-soul.js)
+로컬 SOUL/MEMORY 파일이 장부의 **최신 버전**과 같은지 확인하는 읽기 전용 CLI입니다(트랜잭션·키 불필요). 지문 = 파일 바이트를 CRLF→LF로 정규화한 SHA-256. 설계는 [docs/roadmap_v2.md](docs/roadmap_v2.md).
+
+```powershell
+node scripts/check-soul.js --agent 1 C:\path\to\SOUL.md
+node scripts/check-soul.js C:\path\SOUL.md@1 C:\path\other.md@2   # 파일별 agentId는 @번호
+npm run check:soul -- --agent 1 C:\path\to\SOUL.md
+```
+- 옵션: `--rpc <url>`(기본 `$env:BASE_SEPOLIA_RPC` 또는 https://sepolia.base.org), `--network baseSepolia|localhost`, `--contract <주소>`, `--json`, `--quiet`(일치하는 파일은 출력 생략). 컨트랙트 주소·체인 ID는 `deployments/<network>.json` 재사용.
+- 종료 코드: **0** 전부 최신 버전과 일치 · **1** 하나라도 다름(옛 버전과 같음 / 어떤 기록과도 다름) · **2** 확인 못 함(파일 없음·RPC·에이전트 없음·인자 오류, 1보다 우선).
+- 한계: "같음/다름"만 알려 주며 무엇이 바뀌었는지는 모릅니다. 장부에 기록된 SOUL 해시와만 비교합니다(MEMORY는 그 에이전트에 해시를 기록해 둔 경우에만 일치).
+
+**Windows 작업 스케줄러(매일 09:00)** — 종료 코드가 0이 아니면 작업 기록에 "마지막 실행 결과"로 남습니다.
+```powershell
+schtasks /Create /SC DAILY /ST 09:00 /TN "IeumLedger-CheckSoul" /TR "cmd /c cd /d D:\openclaw-outputs\soul-registry && node scripts\check-soul.js --agent 1 --quiet C:\path\to\SOUL.md >> D:\openclaw-outputs\soul-registry\check-soul.log"
+```
+**OpenClaw 자동화에서**: 같은 명령을 실행하고 종료 코드가 1이면 알림, 2이면 "확인 실패(네트워크?)"로 따로 알립니다. 알림 문구에는 출력 줄(`MISMATCH ...`)을 그대로 붙이면 어느 버전과 같은지 알 수 있습니다.
+
+예(출력은 해시만, SOUL 본문 없음):
+```
+OK       SOUL_sample.md (agent #1 "Synthetic"): matches latest v2  0x...
+MISMATCH SOUL.md (agent #1 "Ieum"): equals OLDER v4, latest is v7  0x3e9f1ab1...
+exit 1 (differs from ledger)
+```

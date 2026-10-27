@@ -10,7 +10,8 @@
         "demo:ieum": "hardhat run scripts/demo-ieum.js --network localhost",
         "demo:batch": "hardhat run scripts/demo-batch.js --network localhost",
         "history": "hardhat run scripts/history.js --network localhost",
-        "estimate:cost": "node scripts/estimate-cost.js"
+        "estimate:cost": "node scripts/estimate-cost.js",
+        "check:soul": "node scripts/check-soul.js"
     },
     "keywords": [],
     "author": "",
