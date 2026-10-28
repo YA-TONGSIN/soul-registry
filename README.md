@@ -150,3 +150,12 @@ $env:DRY=0; $env:IEUM_OWNER_KEY="0x..."; node scripts/record-score.js --network 
 - **조회 화면**: 버전마다 `모델 전환 · 점수 · 근거 · 기록일` 표. 점수가 없으면 "아직 점수 없음 / No score yet". ko/en. 점수는 **소유자 자기 기록**이며 정체성이 이어졌다는 증명이 아니라는 문구가 함께 나옵니다.
 - 테스트: `npx hardhat test`(record-score 8개 포함, 전체 27개), `node test/e2e-register.js`(131개; 점수 값은 모두 **합성(SYNTHETIC) 예시**). 스크린샷: `docs/register/desktop-09-scores-ko.png`, `desktop-10-scores-en.png`(합성 값).
 - 한계: 소유자 지갑만 기록 가능(가스 필요). 서명 묶음 방식의 점수는 컨트랙트 변경이 필요해 후속.
+## 계보 나무 (register/ "계보" 탭)
+SOUL 버전 체인과 갈라짐을 세로 시간선으로 보여 줍니다. 컨트랙트는 바꾸지 않습니다. 한 에이전트 안에서는 `appendSoul`이 `parentHash == head`를 강제해 가지가 생길 수 없으므로, **갈라짐 = 새 에이전트 등록**입니다. 설계는 [docs/roadmap_v2.md](docs/roadmap_v2.md) ③.
+
+- **갈라지는 법**: 새 에이전트를 등록할 때 `note` 또는 `metaURI`에 `fork-of:<agentId>@v<n>` 을 적습니다(예: `fork-of:1@v2`). 이전 기록은 고치지 않습니다.
+- **자기 신고, 검증되지 않음**: 이 표기는 등록한 사람이 직접 적은 주장입니다. 누구나 남의 기록을 부모라고 적을 수 있고, 컨트랙트는 확인하지 않습니다. 그래서 모든 가지에 "자기 신고 표기, 검증되지 않음" 배지가 붙습니다. 존재하지 않는 버전(예: 부모가 v3까지인데 `@v9`)을 가리키는 표기는 가지로 그리지 않고 별도 줄로만 알립니다.
+- **화면**: agentId를 넣으면 v1→vN 타임라인(날짜, 해시 앞 10자리, 메모, ④ 점수 개수)을 그리고, 그 에이전트를 부모로 적은 다른 에이전트를 해당 버전 아래 가지로 그립니다(가지의 가지는 최대 4단계). 에이전트 목록은 `agentCount`만큼 `getAgent`로 읽습니다(최대 300명, 읽기 전용, 외부 요청 없음). ko/en, 모바일 지원, 외부 라이브러리 없이 CSS로 그립니다.
+- **코드**: `register/lineage.js`(표기 파서 `parseFork`, `buildTree`; 브라우저·node 공용), 화면은 `register/app.js`·`style.css`·`i18n.js`.
+- **테스트**: 단위 `test/lineage.test.js`(13개), e2e `node test/e2e-lineage.js`(21개; 합성 에이전트 A v1~v3 → A@v2에서 갈라진 B, metaURI로 갈라진 C, B에서 갈라진 D, 없는 버전을 가리키는 E). 스크린샷: `docs/register/lineage-desktop-ko.png`, `lineage-desktop-en.png`, `lineage-mobile-390-ko.png`(합성 데이터).
+- **테스트 실행 주의**: `test/e2e-*.js`는 hardhat 노드와 같은 포트를 쓰므로 `npx hardhat test` 에 통째로 넘기지 말고 단위 파일만 지정하세요: `npx hardhat test test/SoulRegistry.test.js test/check-soul.test.js test/record-score.test.js test/lineage.test.js` (40개 = 기존 27 + 신규 13). e2e는 하나씩 따로: `node test/e2e-register.js`(131개), `node test/e2e-lineage.js`(21개).

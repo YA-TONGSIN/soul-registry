@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -64,6 +64,7 @@
       <button role="tab" id="tab-direct" aria-controls="panel-direct" aria-selected="true" data-tab="direct" data-i18n="tabDirect"></button>
       <button role="tab" id="tab-free" aria-controls="panel-free" aria-selected="false" tabindex="-1" data-tab="free" data-i18n="tabFree"></button>
       <button role="tab" id="tab-lookup" aria-controls="panel-lookup" aria-selected="false" tabindex="-1" data-tab="lookup" data-i18n="tabLookup"></button>
+      <button role="tab" id="tab-tree" aria-controls="panel-tree" aria-selected="false" tabindex="-1" data-tab="tree" data-i18n="tabTree"></button>
     </div>
 
     <!-- Wallet card, shown for tabs A and B -->
@@ -194,7 +195,27 @@
       </div>
       <div id="verifyOut" class="box" aria-live="polite" hidden></div>
     </div>
-  </section>
+
+    <!-- D: lineage tree -->
+    <div role="tabpanel" id="panel-tree" aria-labelledby="tab-tree" hidden>
+      <h3 data-i18n="treeTitle"></h3>
+      <p class="help" data-i18n="treeHelp"></p>
+      <p class="warn" data-i18n="treeSelfReport"></p>
+      <div class="field">
+        <label for="tAgentId" data-i18n="fAgentId"></label>
+        <div class="row">
+          <input id="tAgentId" type="number" min="1" step="1" inputmode="numeric" value="1">
+          <button type="button" id="treeBtn" class="btn primary" data-i18n="treeBtn"></button>
+        </div>
+      </div>
+      <p id="treeMsg" class="msg" role="status" aria-live="polite"></p>
+      <div id="treeOut"></div>
+      <details class="paste">
+        <summary data-i18n="forkHowTitle"></summary>
+        <p class="help" data-i18n="forkHow"></p>
+        <p><code>fork-of:&lt;agentId&gt;@v&lt;n&gt;</code></p>
+      </details>
+    </div>  </section>
 </main>
 
 <footer class="foot"><p data-i18n="footerNote"></p><div id="footerExtra" hidden><p id="footMaker"></p><p id="footContact" hidden></p><p id="footFree"></p><p id="footDonation" hidden></p></div></footer>
@@ -202,6 +223,7 @@
 <script src="config.js"></script>
 <script src="i18n.js"></script>
 <script src="evidence.js"></script>
+<script src="lineage.js"></script>
 <script src="donate-check.js"></script>
 <script src="vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="vendor/abi.js"></script>

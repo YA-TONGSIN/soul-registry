@@ -91,3 +91,21 @@ select, input, textarea { max-width: 100%; min-width: 0; }
 .donorlist .damt { font-variant-numeric: tabular-nums; }
 .donorlist .dmeta { color: var(--muted, #5f574d); font-size: .92rem; }
 .sign label { display: block; margin: .8rem 0 .25rem; }
+
+/* lineage tree (CSS only, no external code) */
+.lin { margin: .8rem 0; }
+.lin-agent { margin: .4rem 0; }
+.lin-head { margin: .2rem 0; }
+.lin-chain { list-style: none; margin: .4rem 0 .4rem .6rem; padding: 0 0 0 1.1rem; border-left: 3px solid var(--accent); }
+.lin-node { position: relative; margin: 0 0 1rem; padding: .1rem 0 0; overflow-wrap: anywhere; }
+.lin-node::before { content: ""; position: absolute; left: -1.62rem; top: .45rem; width: .7rem; height: .7rem; border-radius: 50%; background: #fff; border: 3px solid var(--accent); }
+.lin-node.head::before { background: var(--accent); }
+.lin-node p { margin: .15rem 0; }
+.lin-branch { margin: .5rem 0 .2rem 1rem; padding: .3rem 0 .1rem .9rem; border-left: 3px dashed var(--warn-line); position: relative; background: #fffdf6; }
+.lin-branch::before { content: ""; position: absolute; left: -1.9rem; top: -.3rem; width: 1.9rem; height: .9rem; border-bottom: 3px dashed var(--warn-line); }
+.lin-branch .lin-chain { border-left-color: var(--warn-line); }
+.lin-branch .lin-node::before { border-color: var(--warn-line); }
+.lin-branch .lin-node.head::before { background: var(--warn-line); }
+.badge.selfrep { border-color: var(--warn-line); color: #6d4a00; background: var(--warn-bg); }
+.lin code { word-break: break-all; }
+@media (max-width: 520px) { .lin-branch { margin-left: .2rem; padding-left: .6rem; } .lin-branch::before { left: -.8rem; width: .8rem; } }

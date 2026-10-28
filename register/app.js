@@ -1,4 +1,4 @@
-﻿/* Ieum Ledger · register page.
+/* Ieum Ledger · register page.
  * Privacy guarantee (by code): SOUL bytes are only ever passed to ethers.sha256(). This file makes no
  * fetch/XHR/WebSocket/sendBeacon calls of its own; the only network traffic is ethers' JSON-RPC to the
  * configured chain, which carries hashes/short notes the user chose to publish (and the CSP blocks the rest).
@@ -80,6 +80,7 @@
     renderFooter();
     renderSoul();
     if (lookupState) renderLookup();
+    if (treeState) renderTree();
     refreshWalletUi();
     updateCounts();
     updateSendLabel();
@@ -227,7 +228,7 @@
       b.tabIndex = on ? 0 : -1;
       $("panel-" + b.dataset.tab).hidden = !on;
     });
-    $("walletCard").hidden = name === "lookup";
+    $("walletCard").hidden = name === "lookup" || name === "tree";
   }
 
   // ───────────── A: direct registration ─────────────
@@ -524,6 +525,80 @@
         el("tbody", {}, ...rows)));
   }
 
+  // ───────────── D: lineage tree (fork-of marks are self-reported, never verified) ─────────────
+  const LIN = window.IEUM_LINEAGE;
+  const MAX_SCAN = 300;
+  let treeState = null; // { rootId, tree, info: Map(id -> { hist, scores }), truncated }
+  async function doTree() {
+    const msg = $("treeMsg");
+    $("treeOut").replaceChildren();
+    treeState = null;
+    setMsg(msg, "", t("treeLoading"));
+    try {
+      const r = await ensureContract();
+      const rootId = BigInt($("tAgentId").value || "0");
+      const count = Number(await r.reg.agentCount());
+      const n = Math.min(count, MAX_SCAN);
+      const agents = (await Promise.all(Array.from({ length: n }, (_, i) => r.reg.getAgent(BigInt(i + 1)))))
+        .map((a) => ({ id: a.id, name: a.name, note: a.note, metaURI: a.metaURI, recordCount: a.recordCount }));
+      const tree = LIN.buildTree(rootId, agents);
+      if (!tree.agent) { setMsg(msg, "err", t("treeNoAgent")); return; }
+      const ids = [...new Set(LIN.collectIds(tree))];
+      const info = new Map();
+      await Promise.all(ids.map(async (id) => { const [hist, scores] = await Promise.all([r.reg.getHistory(BigInt(id)), r.reg.getScores(BigInt(id))]); info.set(id, { hist, scores }); }));
+      treeState = { rootId: String(rootId), tree, info, truncated: count > n ? n : 0 };
+      setMsg(msg, "", "");
+      renderTree();
+    } catch (e) { setMsg(msg, "err", t("treeFail", { msg: e.shortMessage || e.message })); }
+  }
+  function treeAgent(node, isRoot) {
+    const a = node.agent;
+    const info = treeState.info.get(node.id) || { hist: [], scores: [] };
+    const wrap = el("div", { class: "lin-agent", id: "linAgent" + node.id });
+    const head = el("p", { class: "lin-head" }, el("b", { text: t("treeAgent", { id: node.id, name: a.name }) }));
+    if (isRoot) head.append(el("span", { class: "badge m", text: t("treeRootBadge") }));
+    wrap.append(head);
+    if (node.forkFrom) {
+      const f = node.forkFrom;
+      const pn = node.parent !== undefined ? node.parent : null;
+      const pname = pn && pn.name != null ? pn.name : (treeState.names.get(f.agentId) || "?");
+      wrap.append(el("p", { class: "help lin-fork" }, t("treeForkOf", { id: f.agentId, name: pname, v: f.version }), " ", el("span", { class: "badge selfrep", text: t("selfReportBadge") })));
+      if (isRoot && node.parent && !node.parent.exists) wrap.append(el("p", { class: "err", text: t("treeParentMissing") }));
+    }
+    const ol = el("ol", { class: "lin-chain" });
+    info.hist.forEach((r, i) => {
+      const v = i + 1;
+      const nScores = info.scores.filter((s) => s.soulHash === r.soulHash).length;
+      const li = el("li", { class: "lin-node" + (v === info.hist.length ? " head" : ""), id: "linNode" + node.id + "v" + v });
+      const line = el("p", { class: "lin-line" }, el("b", { text: "v" + v }), " ", el("span", { class: "help", text: when(r.timestamp) }));
+      if (v === info.hist.length) line.append(el("span", { class: "badge", text: t("headBadge") }));
+      li.append(line,
+        el("p", { class: "help" }, t("treeNodeHash") + " ", el("code", { text: r.soulHash.slice(2, 12) })),
+        el("p", { text: r.note }),
+        el("p", { class: "help lin-score", text: t("treeNodeScores", { n: nScores }) }));
+      const subs = node.branches[v];
+      if (subs && subs.length) {
+        const br = el("div", { class: "lin-branch", id: "linBranch" + node.id + "v" + v }, el("p", { class: "help", text: t("treeBranchLabel") }));
+        subs.forEach((s) => br.append(treeAgent(s, false)));
+        li.append(br);
+      }
+      ol.append(li);
+    });
+    wrap.append(ol);
+    node.dangling.forEach((d) => wrap.append(el("p", { class: "help lin-dangling" }, t("treeDangling", { id: d.id, name: d.agent ? d.agent.name : "?", v: d.forkFrom.version }), " ", el("span", { class: "badge selfrep", text: t("selfReportBadge") }))));
+    return wrap;
+  }
+  function renderTree() {
+    const out = $("treeOut");
+    out.replaceChildren();
+    if (!treeState) return;
+    const { tree } = treeState;
+    treeState.names = new Map();
+    (function walk(n) { if (n.agent) treeState.names.set(n.id, n.agent.name); Object.values(n.branches).forEach((s) => s.forEach(walk)); })(tree);
+    if (tree.parent && tree.parent.name != null) treeState.names.set(tree.parent.agentId, tree.parent.name);
+    if (treeState.truncated) out.append(el("p", { class: "warn", text: t("treeTooMany", { n: treeState.truncated }) }));
+    out.append(el("div", { class: "lin" }, treeAgent(tree, true)));
+  }
   // verify a signed-entry file (+ optional proof/root added by an operator)
   async function verifyEntryFile(file) {
     const out = $("verifyOut");
@@ -556,7 +631,7 @@
     if (!NETS.length) { document.body.textContent = t("networkBlocked"); return; }
     $("net").addEventListener("change", (ev) => {
       net = NETS.find((n) => n.key === ev.target.value);
-      agentCtx = null; lookupState = null;
+      agentCtx = null; lookupState = null; treeState = null; $("treeOut").replaceChildren();
       $("agentBox").replaceChildren(); $("lookupOut").replaceChildren(); $("directResult").hidden = true; $("freeResult").hidden = true;
       refreshWalletUi();
     });
@@ -583,6 +658,7 @@
     $("fetchParent").addEventListener("click", fetchParent);
     $("signBtn").addEventListener("click", doSign);
     $("lookupBtn").addEventListener("click", doLookup);
+    $("treeBtn").addEventListener("click", doTree);
     $("entryFile").addEventListener("change", (ev) => { if (ev.target.files[0]) verifyEntryFile(ev.target.files[0]); });
     applyLang();
     selectTab("direct");
