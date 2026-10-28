@@ -62,6 +62,7 @@ window.IEUM_CONFIG = {
       label: { ko: "Base Sepolia 시험망 (가짜 이더)", en: "Base Sepolia testnet (play money)" },
       rpcUrl: "https://sepolia.base.org",
       registry: "0xA28a899E3b7255cea1cDc7d92b6ce7FAFBE9F237", // deployments/baseSepolia.json
+      deployBlock: 49840418, // block of the deploy tx; lower bound of the tx-hash lookup (the public RPC prunes older blocks)
       testnet: true,
       explorer: "https://sepolia.basescan.org",
       currency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },

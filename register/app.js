@@ -556,7 +556,7 @@
   async function findAppendTx(agentId, r) {
     const { provider, reg } = readerReg();
     const target = Number(r.timestamp);
-    let lo = 0, hi = await provider.getBlockNumber();
+    let lo = net.deployBlock || 0, hi = await provider.getBlockNumber();
     while (lo < hi) {
       const mid = Math.floor((lo + hi) / 2);
       const b = await provider.getBlock(mid);
