@@ -159,3 +159,23 @@ SOUL 버전 체인과 갈라짐을 세로 시간선으로 보여 줍니다. 컨�
 - **코드**: `register/lineage.js`(표기 파서 `parseFork`, `buildTree`; 브라우저·node 공용), 화면은 `register/app.js`·`style.css`·`i18n.js`.
 - **테스트**: 단위 `test/lineage.test.js`(13개), e2e `node test/e2e-lineage.js`(21개; 합성 에이전트 A v1~v3 → A@v2에서 갈라진 B, metaURI로 갈라진 C, B에서 갈라진 D, 없는 버전을 가리키는 E). 스크린샷: `docs/register/lineage-desktop-ko.png`, `lineage-desktop-en.png`, `lineage-mobile-390-ko.png`(합성 데이터).
 - **테스트 실행 주의**: `test/e2e-*.js`는 hardhat 노드와 같은 포트를 쓰므로 `npx hardhat test` 에 통째로 넘기지 말고 단위 파일만 지정하세요: `npx hardhat test test/SoulRegistry.test.js test/check-soul.test.js test/record-score.test.js test/lineage.test.js` (40개 = 기존 27 + 신규 13). e2e는 하나씩 따로: `node test/e2e-register.js`(131개), `node test/e2e-lineage.js`(21개).
+## 자동 기록 (watch-soul.js → approve-soul.js, 로드맵 ②, 로컬 구현)
+SOUL이 바뀌면 **사람이 확인한 뒤에만** 서명이 만들어집니다(몰래 바뀐 파일을 새 버전으로 박제하지 않기 위한 기본값). 컨트랙트 변경 없음. 설계는 [docs/roadmap_v2.md](docs/roadmap_v2.md) ②.
+
+```powershell
+# 1) 한 번만 실행되는 감시(작업 스케줄러/OpenClaw 자동화에서 호출). 하는 일은 pending/ 항목 만들기뿐: 서명·키·트랜잭션 없음.
+node scripts/watch-soul.js --network baseSepolia --agent 1 C:\path\to\SOUL.md
+# 2) 사람이 pending/<id>.json을 보고 결정. approve는 기본 DRY(출력만).
+node scripts/approve-soul.js approve a1-1a2b3c4d --file C:\path\to\SOUL.md
+$env:DRY=0; $env:IEUM_OWNER_KEY="0x..."; node scripts/approve-soul.js approve a1-1a2b3c4d --file C:\path\to\SOUL.md   # batches/signed-<id>.json 생성
+node scripts/approve-soul.js reject a1-1a2b3c4d --reason "내가 안 바꿨다"   # rejected/로 이동, "몰래 바뀜 의심" 표시
+# 3) 묶음 올리기는 기존 anchorBatch 흐름 그대로(lib/merkle.js 트리 → anchorBatch; scripts/demo-batch.js 참고). 새 스크립트 없음.
+# 4) 앵커된 서명까지 최신으로 인정하는 확인:
+node scripts/check-soul.js --agent 1 --batches-dir D:\openclaw-outputs\soul-registry\batches C:\path\to\SOUL.md
+```
+- **watch 종료 코드**: 0 최신과 같음 · 1 새 대기 항목 만듦(사람이 볼 차례) · 2 확인 못 함 · 3 같은 지문이 이미 대기 중이거나 거절됨(새로 안 만듦).
+- **대기 항목에는** 지문(LF-SHA-256)·감지 시각·직전 버전 번호·바뀐 줄 수(`diffLines`)·에이전트 ID/이름·직전 해시만 들어갑니다. **내용은 없습니다.** 줄 수는 직전 승인 때 `state/`에 저장한 줄별 해시로 셉니다(처음엔 null). `pending/ approved/ rejected/ state/`는 git에 올리지 않습니다.
+- **approve**: 파일을 다시 읽어 지문이 대기 항목과 같을 때만 서명(감지 뒤에 바뀐 파일은 거부). 키는 환경변수 `IEUM_OWNER_KEY`로만 받고(키 파일은 안 읽음) 에이전트 소유자 키여야 합니다. 서명은 EIP-712 `SoulEntry`, 메모는 `auto: file fingerprint change detected; human-approved`. 트랜잭션은 보내지 않습니다.
+- **최신 판정**: 장부 head 뒤에, `parentHash`가 이어지는 서명 파일(`batches/signed-*.json`)을 최신으로 칩니다. 그래서 승인 후 앵커 전에도 watch가 같은 변경을 다시 올리지 않습니다. `check-soul --batches-dir`는 거기에 더해 `root`/`proof`가 있고 `verifyBatchEntry`가 참인(=앵커됨) 서명만 인정합니다.
+- **한계**: 거절·승인은 사람 판단이며 도구가 "무엇이 바뀌었는지"는 모릅니다(줄 수만). 소유자 키 보관·유출 위험은 로드맵 ② 참고. 묶음 앵커링(운영자)과 `root/proof`를 서명 파일에 붙이는 일은 아직 수동(e2e에 예시).
+- **테스트**: 단위 `test/auto-record.test.js`(12개) — 실행: `npx hardhat test test/SoulRegistry.test.js test/check-soul.test.js test/record-score.test.js test/lineage.test.js test/auto-record.test.js`(52개 = 40 + 12). e2e `node test/e2e-auto-record.js`(20개; 합성 SOUL 변경 → watch → approve(DRY, 서명) → anchorBatch → check-soul 0, 거절 경로 포함, 로컬 hardhat 노드만, 다른 e2e와 동시 실행 금지).

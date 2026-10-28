@@ -11,6 +11,8 @@
 //              1 = at least one file differs (older version, or unknown to the ledger)
 //              2 = could not check (bad args, missing file, RPC/agent error); takes priority over 1
 //
+// --batches-dir <dir>: also accept signed entries (approve-soul.js) that carry {root, proof} and verify on-chain via verifyBatchEntry
+//   (i.e. approved AND anchored); they count as newer versions than the ledger head.
 // Options: --agent <id>  --rpc <url>  --network baseSepolia|localhost  --contract <addr>  --json  --quiet
 // RPC order: --rpc, $BASE_SEPOLIA_RPC (baseSepolia), default https://sepolia.base.org. Contract: deployments/<network>.json.
 const fs = require("fs");
@@ -21,6 +23,7 @@ const DEFAULT_RPC = { baseSepolia: "https://sepolia.base.org", localhost: "http:
 const ABI = [
   "function getAgent(uint256) view returns (tuple(uint256 id, string name, string note, address owner, uint64 createdAt, string metaURI, bytes32 headHash, uint32 recordCount))",
   "function getHistory(uint256) view returns (tuple(uint256 agentId, bytes32 soulHash, bytes32 parentHash, string note, uint64 timestamp)[])",
+  "function verifyBatchEntry(tuple(address owner, string agentName, bytes32 soulHash, bytes32 parentHash, string note, uint64 signedAt) e, bytes signature, bytes32[] proof, bytes32 root) view returns (bool)",
 ];
 
 function normalizeLF(buf) {
@@ -42,6 +45,7 @@ function parseArgs(argv) {
     else if (a === "--rpc") o.rpc = val();
     else if (a === "--network") o.network = val();
     else if (a === "--contract") o.contract = val();
+    else if (a === "--batches-dir") o.batchesDir = val();
     else if (a === "--json") o.json = true;
     else if (a === "--quiet") o.quiet = true;
     else if (a === "-h" || a === "--help") o.help = true;
@@ -60,13 +64,25 @@ function splitSpec(spec, defaultAgent) {
   return { file, agentId: BigInt(id) };
 }
 
-async function loadHistory(reg, agentId, cache) {
+async function loadHistory(reg, agentId, cache, batchesDir) {
   const k = agentId.toString();
   if (!cache.has(k)) {
     const agent = await reg.getAgent(agentId);
     if (agent.owner === "0x0000000000000000000000000000000000000000") throw new Error(`agent #${k} not found`);
     const hist = await reg.getHistory(agentId);
-    cache.set(k, { name: agent.name, head: agent.headHash.toLowerCase(), hist: hist.map((r) => r.soulHash.toLowerCase()) });
+    let chain = { name: agent.name, head: agent.headHash.toLowerCase(), hist: hist.map((r) => r.soulHash.toLowerCase()) };
+    if (batchesDir) {
+      // Auto-record: signed entries that are anchored AND verify on-chain (verifyBatchEntry checks the root is anchored) count as newer versions.
+      const B = require("../lib/soul-baseline");
+      const ok = [];
+      for (const s of B.readSignedEntries(batchesDir, agentId)) {
+        if (!B.isHash(s.root) || !Array.isArray(s.proof)) continue;
+        const e = { ...s.entry, signedAt: BigInt(s.entry.signedAt) };
+        try { if (await reg.verifyBatchEntry(e, s.signature, s.proof, s.root)) ok.push(s); } catch { /* not verifiable -> ignored */ }
+      }
+      chain = B.mergeSigned(chain, ok);
+    }
+    cache.set(k, chain);
   }
   return cache.get(k);
 }
@@ -117,7 +133,7 @@ async function run(argv, deps = {}) {
       let buf;
       try { buf = fs.readFileSync(file); } catch (e) { results.push({ ...base, status: "error", error: `cannot read file: ${e.code || e.message}` }); continue; }
       try {
-        const chain = await loadHistory(reg, agentId, cache);
+        const chain = await loadHistory(reg, agentId, cache, o.batchesDir);
         results.push({ ...base, agentName: chain.name, ...compare(buf, chain) });
       } catch (e) { results.push({ ...base, status: "error", error: e.shortMessage || e.message }); }
     }

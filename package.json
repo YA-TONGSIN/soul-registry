@@ -12,7 +12,9 @@
         "history": "hardhat run scripts/history.js --network localhost",
         "estimate:cost": "node scripts/estimate-cost.js",
         "check:soul": "node scripts/check-soul.js",
-        "record:score": "node scripts/record-score.js"
+        "record:score": "node scripts/record-score.js",
+        "watch:soul": "node scripts/watch-soul.js",
+        "approve:soul": "node scripts/approve-soul.js"
     },
     "keywords": [],
     "author": "",

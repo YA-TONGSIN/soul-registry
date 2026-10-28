@@ -6,3 +6,7 @@ coverage/
 coverage.json
 *.key
 .env
+pending/
+approved/
+rejected/
+state/
