@@ -7,6 +7,19 @@
      When you add a network in config.js, add its RPC host here too. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:* http://localhost:* https://sepolia.base.org; base-uri 'none'; form-action 'none'">
 <title>이음 장부 · 등록 / Ieum Ledger · Register</title>
+<meta name="description" content="AI의 SOUL 파일을 지문(SHA-256)으로만 장부에 남기고, 버전의 계보를 한눈에 봅니다. 내용은 올라가지 않습니다. / Record only the SHA-256 fingerprint of an AI's SOUL file and see its version lineage. The content is never uploaded.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="이음 장부 · Ieum Ledger">
+<meta property="og:title" content="이음 장부 — AI의 SOUL 버전 계보 / Ieum Ledger — SOUL version lineage">
+<meta property="og:description" content="SOUL 파일 → 지문(SHA-256) → 장부에 버전 기록 → 계보로 보기. 공개되는 것은 해시와 한 줄 메모뿐입니다. / Only hashes and one-line notes are public.">
+<meta property="og:url" content="https://ieum-ledger.pages.dev/">
+<meta property="og:image" content="https://ieum-ledger.pages.dev/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="이음(#1)의 SOUL 버전 v1~v8 계보 화면 / Lineage view of Ieum (#1), versions v1 to v8">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="이음 장부 — AI의 SOUL 버전 계보 / Ieum Ledger">
+<meta name="twitter:image" content="https://ieum-ledger.pages.dev/og-image.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +27,6 @@
 <header class="top">
   <div>
     <h1 data-i18n="title">이음 장부 · 등록</h1>
-    <p class="sub" data-i18n="subtitle"></p>
   </div>
   <div class="controls">
     <div class="group" role="group" aria-labelledby="langLabel">
@@ -30,6 +42,21 @@
 </header>
 
 <main id="main">
+  <section class="hero" aria-labelledby="heroLine">
+    <p id="heroLine" class="hero-line" data-i18n="subtitle"></p>
+    <ol class="hero-steps">
+      <li><b data-i18n="heroS1"></b><span data-i18n="heroS1d"></span></li>
+      <li><b data-i18n="heroS2"></b><span data-i18n="heroS2d"></span></li>
+      <li><b data-i18n="heroS3"></b><span data-i18n="heroS3d"></span></li>
+      <li><b data-i18n="heroS4"></b><span data-i18n="heroS4d"></span></li>
+    </ol>
+    <div class="row">
+      <button type="button" id="heroLineage" class="btn primary" data-i18n="heroBtnLineage"></button>
+      <button type="button" id="heroCheck" class="ghost" data-i18n="heroBtnCheck"></button>
+    </div>
+    <p class="help" data-i18n="heroNote"></p>
+  </section>
+
   <section class="notice" aria-labelledby="noticeTitle">
     <h2 id="noticeTitle" data-i18n="noticeTitle"></h2>
     <ul>

@@ -551,6 +551,33 @@
       renderTree();
     } catch (e) { setMsg(msg, "err", t("treeFail", { msg: e.shortMessage || e.message })); }
   }
+  // The history struct has no tx hash. Find the block by timestamp (binary search; the public RPC limits
+  // eth_getLogs to 200 blocks), then read the SoulAppended log of that block.
+  async function findAppendTx(agentId, r) {
+    const { provider, reg } = readerReg();
+    const target = Number(r.timestamp);
+    let lo = 0, hi = await provider.getBlockNumber();
+    while (lo < hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      const b = await provider.getBlock(mid);
+      if (b.timestamp >= target) hi = mid; else lo = mid + 1;
+    }
+    const logs = await reg.queryFilter(reg.filters.SoulAppended(BigInt(agentId), r.soulHash), Math.max(0, lo - 1), lo + 1);
+    return logs.length ? logs[0].transactionHash : null;
+  }
+  function fillNodeDetail(box, agentId, r, v) {
+    const row = (label, ...vals) => el("p", { class: "lin-kv" }, el("span", { class: "help", text: label }), el("br"), ...vals);
+    const isFirst = r.parentHash === ZERO;
+    const txSlot = el("span", { id: "linTx" + agentId + "v" + v, text: t("nodeTxLoading") });
+    box.append(
+      row(t("nodeFullHash"), el("code", { text: r.soulHash })),
+      row(t("nodeParentHash"), isFirst ? el("span", { text: t("nodeParentNone") }) : el("code", { text: r.parentHash })),
+      row(t("nodeTx"), txSlot));
+    findAppendTx(agentId, r).then((h) => {
+      if (!h) txSlot.textContent = t("nodeTxNone");
+      else txSlot.replaceChildren(explorerLink(h));
+    }).catch(() => { txSlot.textContent = t("nodeTxNone"); });
+  }
   function treeAgent(node, isRoot) {
     const a = node.agent;
     const info = treeState.info.get(node.id) || { hist: [], scores: [] };
@@ -570,12 +597,20 @@
       const v = i + 1;
       const nScores = info.scores.filter((s) => s.soulHash === r.soulHash).length;
       const li = el("li", { class: "lin-node" + (v === info.hist.length ? " head" : ""), id: "linNode" + node.id + "v" + v });
-      const line = el("p", { class: "lin-line" }, el("b", { text: "v" + v }), " ", el("span", { class: "help", text: when(r.timestamp) }));
+      const line = el("button", { type: "button", class: "lin-line lin-toggle", "aria-expanded": "false", "aria-controls": "linDetail" + node.id + "v" + v, title: t("nodeToggleHint") }, el("b", { text: "v" + v }), " ", el("span", { class: "lin-date", text: when(r.timestamp) }));
       if (v === info.hist.length) line.append(el("span", { class: "badge", text: t("headBadge") }));
+      line.append(el("span", { class: "lin-caret", "aria-hidden": "true", text: "▾" }));
+      const detail = el("div", { class: "lin-detail", id: "linDetail" + node.id + "v" + v, hidden: "" });
+      line.addEventListener("click", () => {
+        const open = line.getAttribute("aria-expanded") !== "true";
+        line.setAttribute("aria-expanded", String(open));
+        detail.hidden = !open;
+        if (open && !detail.firstChild) fillNodeDetail(detail, node.id, r, v);
+      });
       li.append(line,
-        el("p", { class: "help" }, t("treeNodeHash") + " ", el("code", { text: r.soulHash.slice(2, 12) })),
-        el("p", { text: r.note }),
-        el("p", { class: "help lin-score", text: t("treeNodeScores", { n: nScores }) }));
+        el("p", { class: "lin-note", text: r.note }),
+        el("p", { class: "help lin-meta" }, t("treeNodeHash") + " ", el("code", { text: r.soulHash.slice(2, 12) }), " · " + t("treeNodeScores", { n: nScores })),
+        detail);
       const subs = node.branches[v];
       if (subs && subs.length) {
         const br = el("div", { class: "lin-branch", id: "linBranch" + node.id + "v" + v }, el("p", { class: "help", text: t("treeBranchLabel") }));
@@ -663,6 +698,21 @@
     applyLang();
     selectTab("direct");
     setMode("new");
+    // lineage-first: #lineage=<agentId> (or the hero button) opens the lineage tab and draws it with no input
+    const openLineage = (id) => {
+      selectTab("tree");
+      $("tAgentId").value = String(id);
+      $("panel-tree").scrollIntoView({ block: "start" });
+      return doTree();
+    };
+    const hashId = () => { const m = /^#lineage=([1-9]\d{0,17})$/.exec(location.hash); return m ? m[1] : null; };
+    $("heroLineage").addEventListener("click", () => {
+      if (hashId() === "1") openLineage("1"); else location.hash = "#lineage=1"; // hashchange then opens it
+    });
+    $("heroCheck").addEventListener("click", () => { selectTab("lookup"); $("step1").scrollIntoView({ block: "start" }); $("soulFile").focus({ preventScroll: true }); });
+    window.addEventListener("hashchange", () => { const id = hashId(); if (id) openLineage(id); });
+    const first = hashId();
+    if (first) openLineage(first);
   }
   init();
 })();
