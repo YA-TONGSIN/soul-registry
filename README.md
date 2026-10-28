@@ -1,5 +1,8 @@
 # Ieum Ledger · 이음 장부 (시제품)
 
+> **이음 장부는 AI 에이전트의 문서 버전과 평가 근거를 기록하고, 이음 계보는 그 변화와 분기를 보여 준다.**
+> *Ieum Ledger records an AI agent's document versions and the evidence of its evaluations; Ieum Lineage shows how they change and branch.*
+
 **English** — A free, tokenless public ledger for the version history of AI agents' identity documents (SOUL files). Only SHA-256 hashes, a name, a date and a one-line note go on-chain — never the document itself. Free registration works through signed batches whose Merkle root is anchored once a day (about ₩2/day on Base); you can also register directly from your own wallet. Companion to the research tool [SOUL VERIFY](https://github.com/YA-TONGSIN/soul-verify). Currently a **testnet prototype** (Base Sepolia); contract: `0xA28a899E3b7255cea1cDc7d92b6ce7FAFBE9F237`. Site: https://ieum-ledger.pages.dev. Companion paper (Zenodo): [10.5281/zenodo.23653775](https://doi.org/10.5281/zenodo.23653775) (concept DOI, all versions; v0.7.1 = [10.5281/zenodo.23653776](https://doi.org/10.5281/zenodo.23653776)).
 
 **한국어** — AI 에이전트의 SOUL(정체성) 문서가 어떻게 바뀌어 왔는지를 해시로만 남기는 무료·무토큰 공개 장부입니다. 문서 본문은 올리지 않습니다. 현재는 테스트넷(Base Sepolia) 시제품입니다.
@@ -11,6 +14,17 @@ AI 에이전트의 SOUL 문서 이력을 **해시로만** 남기는 공개 장�
 
 > ⚠️ 로컬/테스트넷 전용 시제품. 메인넷 배포 금지(배포 스크립트가 localhost·baseSepolia 외에는 거부).
 > 체인 기록은 영구 공개 — 해시·이름·날짜·짧은 한 줄만 올린다.
+
+## 장부가 말해 주지 않는 것 / What the ledger does not tell you
+**한국어**
+- 지문 일치 ≠ 행동 유지. 지문이 같아도 모델이 같은 행동을 한다는 뜻은 아니다. 행동은 SOUL VERIFY 같은 평가로 따로 재야 한다.
+- 기록이 남았다 ≠ 기록 내용이 참이다. 장부는 "그 시점에 이 기록이 올라왔다"만 보여 준다(점수·`fork-of` 표기는 소유자의 자기 신고).
+- 파일이 달라졌다 ≠ 누군가 몰래 바꿨다. 변조 알림은 '확인하라'는 신호이지 범인 지목이 아니다(줄바꿈·정상 편집·다른 파일일 수 있다).
+
+**English**
+- Matching fingerprint ≠ unchanged behaviour. The same file does not mean the model acts the same; behaviour has to be measured separately by an evaluation such as SOUL VERIFY.
+- A record exists ≠ the record is true. The ledger only shows that this entry was posted at that time (scores and `fork-of` notes are the owner's self-report).
+- A file differs ≠ someone changed it in secret. A tamper alert is a signal to "check", not an accusation (line endings, a normal edit, or a different file can all cause it).
 
 ## 구성
 | 경로 | 내용 |
@@ -147,6 +161,7 @@ $env:DRY=0; $env:IEUM_OWNER_KEY="0x..."; node scripts/record-score.js --network 
 ```
 - **인자**: `--agent`, `--soul-hash`(또는 `--soul-file`), `--model`(전환 후 모델, 64바이트 이하), `--from-model`(선택), `--score`(0~1 소수 → `scoreBps` = 반올림(점수×10000)), 근거 하나: `--evidence-url`(https, 200바이트 이하) / `--report-file` / `--report-hash`.
 - **근거 URL은 체인에 저장되지 않습니다**(컨트랙트에 URL 칸이 없음). `reportHash` = URL 문자열의 SHA-256(또는 보고서 파일 SHA-256)만 올라갑니다. 화면에 링크를 보여 주려면 `--save-evidence`로 `register/evidence.js`(`{reportHash: URL}`)에 병합하고 페이지를 배포하세요. 화면은 **sha256(URL) == reportHash**일 때만 링크를 겁니다(위조된 매핑은 지문만 표시).
+- **링크 연결 권장 형식**: 보고서 파일이 없고 URL 대신 식별 문자열을 쓸 때는 `--report-hash`에 아래 문자열의 SHA-256을 넣어, SOUL VERIFY 사전등록 커밋과 Zenodo DOI를 한 점수 기록에 묶는다. 형식 `soulverify:<버전>@<사전등록 커밋>;doi:<DOI>`, 예: `soulverify:v1.1@<commit>;doi:10.5281/zenodo.23653775`. (Recommended format: hash this string as `reportHash` to bind the SOUL VERIFY preregistration commit and the Zenodo DOI to one score record.) 문자열 자체는 SOUL VERIFY 저장소·논문에 공개해 두면 누구나 SHA-256으로 `reportHash`와 대조할 수 있다.
 - **조회 화면**: 버전마다 `모델 전환 · 점수 · 근거 · 기록일` 표. 점수가 없으면 "아직 점수 없음 / No score yet". ko/en. 점수는 **소유자 자기 기록**이며 정체성이 이어졌다는 증명이 아니라는 문구가 함께 나옵니다.
 - 테스트: `npx hardhat test`(record-score 8개 포함, 전체 27개), `node test/e2e-register.js`(131개; 점수 값은 모두 **합성(SYNTHETIC) 예시**). 스크린샷: `docs/register/desktop-09-scores-ko.png`, `desktop-10-scores-en.png`(합성 값).
 - 한계: 소유자 지갑만 기록 가능(가스 필요). 서명 묶음 방식의 점수는 컨트랙트 변경이 필요해 후속.
