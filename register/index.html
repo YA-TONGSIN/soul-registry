@@ -57,6 +57,41 @@
     <p class="help" data-i18n="heroNote"></p>
   </section>
 
+  <section class="card demo" aria-labelledby="demoTitle">
+    <h2 id="demoTitle" data-i18n="demoTitle"></h2>
+    <p class="help demo-help" data-i18n="demoHelp"></p>
+    <label for="demoText" class="lbl" data-i18n="demoLabel"></label>
+    <textarea id="demoText" rows="2" autocomplete="off" spellcheck="false"></textarea>
+    <div class="row"><button type="button" id="demoReset" class="ghost" data-i18n="demoReset"></button></div>
+    <dl class="demo-hash">
+      <dt data-i18n="demoOrig"></dt><dd><code id="demoOrig" class="hex"></code></dd>
+      <dt data-i18n="demoNow"></dt><dd><code id="demoCur" class="hex"></code></dd>
+    </dl>
+    <p><b id="demoStatus" class="demo-status" role="status" aria-live="polite"></b> <span id="demoCount" class="help"></span></p>
+  </section>
+
+  <section class="uses" aria-labelledby="useTitle">
+    <h2 id="useTitle" data-i18n="useTitle"></h2>
+    <div class="use-cards">
+      <article class="card use-card">
+        <h3 data-i18n="useC1T"></h3>
+        <p data-i18n="useC1B"></p>
+        <p class="help evid"><span data-i18n="useEvid"></span> <a href="https://doi.org/10.5281/zenodo.23653775" rel="noopener">10.5281/zenodo.23653775</a>)</p>
+      </article>
+      <article class="card use-card">
+        <h3 data-i18n="useC2T"></h3>
+        <p data-i18n="useC2B"></p>
+        <code class="cmd" data-i18n="useC2Cmd"></code>
+        <p class="help evid"><span data-i18n="useEvid"></span> <a href="https://doi.org/10.5281/zenodo.23653775" rel="noopener">10.5281/zenodo.23653775</a>)</p>
+      </article>
+      <article class="card use-card">
+        <h3 data-i18n="useC3T"></h3>
+        <p data-i18n="useC3B"></p>
+        <p class="help evid"><span data-i18n="useEvid"></span> <a href="https://doi.org/10.5281/zenodo.23653775" rel="noopener">10.5281/zenodo.23653775</a>)</p>
+      </article>
+    </div>
+  </section>
+
   <section class="notice" aria-labelledby="noticeTitle">
     <h2 id="noticeTitle" data-i18n="noticeTitle"></h2>
     <ul>
@@ -262,5 +297,6 @@
 <script src="vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="vendor/abi.js"></script>
 <script src="app.js"></script>
+<script src="demo.js"></script>
 </body>
 </html>
