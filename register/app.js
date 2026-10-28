@@ -552,7 +552,7 @@
     } catch (e) { setMsg(msg, "err", t("treeFail", { msg: e.shortMessage || e.message })); }
   }
   // The history struct has no tx hash. Find the block by timestamp (binary search; the public RPC limits
-  // eth_getLogs to 200 blocks), then read the SoulAppended log of that block.
+  // eth_getLogs to 200 blocks), then read the SoulAppended log near that block.
   async function findAppendTx(agentId, r) {
     const { provider, reg } = readerReg();
     const target = Number(r.timestamp);
@@ -562,7 +562,7 @@
       const b = await provider.getBlock(mid);
       if (b.timestamp >= target) hi = mid; else lo = mid + 1;
     }
-    const logs = await reg.queryFilter(reg.filters.SoulAppended(BigInt(agentId), r.soulHash), Math.max(0, lo - 1), lo + 1);
+    const logs = await reg.queryFilter(reg.filters.SoulAppended(BigInt(agentId), r.soulHash), Math.max(0, lo - 1), lo + 50); // blocks can share a timestamp on Base, so look a little past the first one
     return logs.length ? logs[0].transactionHash : null;
   }
   function fillNodeDetail(box, agentId, r, v) {
