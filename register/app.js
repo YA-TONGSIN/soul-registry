@@ -79,6 +79,7 @@
     fillNetSelect();
     renderFooter();
     renderSoul();
+    if (lookupState) renderLookup();
     refreshWalletUi();
     updateCounts();
     updateSendLabel();
@@ -490,11 +491,37 @@
         head,
         el("p", { text: r.note }),
         el("p", { class: "help" }, "SHA-256 ", el("code", { text: r.soulHash })),
-        el("p", { class: "help" }, t("parent") + " ", el("code", { text: r.parentHash }))));
+        el("p", { class: "help" }, t("parent") + " ", el("code", { text: r.parentHash })),
+        scoreBlock(r.soulHash, scores, i)));
     });
-    if (scores.length) {
-      out.append(el("h4", { text: t("scoresTitle") }), el("ul", {}, scores.map((s) => el("li", { text: t("scoreLine", { from: s.fromModel, to: s.toModel, pct: (Number(s.scoreBps) / 100).toFixed(2) }) }))));
-    }
+    if (scores.length) out.append(el("p", { class: "help", id: "scoreNote", text: t("scoreNote") }));
+  }
+
+  // Public evidence link: shown only when register/evidence.js maps this reportHash to an https URL whose SHA-256 equals it.
+  function evidenceUrl(reportHash) {
+    const u = (window.IEUM_EVIDENCE || {})[reportHash.toLowerCase()];
+    if (typeof u !== "string" || !/^https:\/\/[^\s]+$/.test(u)) return null;
+    return ethers.sha256(enc.encode(u)) === reportHash.toLowerCase() ? u : null;
+  }
+  function scoreBlock(soulHash, scores, i) {
+    const mine = scores.filter((s) => s.soulHash === soulHash);
+    if (!mine.length) return el("p", { class: "help noscore", id: "noScore" + (i + 1), text: t("scoreNone") });
+    const rows = mine.map((s) => {
+      const u = evidenceUrl(s.reportHash);
+      const ev = u
+        ? el("a", { href: u, target: "_blank", rel: "noopener noreferrer", text: t("scoreEvidenceOk") })
+        : el("code", { title: t("scoreEvidenceHash"), text: short(s.reportHash) });
+      return el("tr", {},
+        el("td", { text: (s.fromModel || t("scoreModelNone")) + " → " + (s.toModel || t("scoreModelNone")) }),
+        el("td", { text: (Number(s.scoreBps) / 100).toFixed(2) + "%" }),
+        el("td", {}, ev),
+        el("td", { text: when(s.timestamp) }));
+    });
+    return el("div", { class: "scoreWrap" },
+      el("p", {}, el("b", { text: t("scoresHead", { n: mine.length }) })),
+      el("table", { class: "scores", id: "scores" + (i + 1) },
+        el("thead", {}, el("tr", {}, ...["scoreColModel", "scoreColScore", "scoreColEvidence", "scoreColDate"].map((k) => el("th", { scope: "col", text: t(k) })))),
+        el("tbody", {}, ...rows)));
   }
 
   // verify a signed-entry file (+ optional proof/root added by an operator)

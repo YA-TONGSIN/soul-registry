@@ -134,3 +134,19 @@ OK       SOUL_sample.md (agent #1 "Synthetic"): matches latest v2  0x...
 MISMATCH SOUL.md (agent #1 "Ieum"): equals OLDER v4, latest is v7  0x3e9f1ab1...
 exit 1 (differs from ledger)
 ```
+## SOUL VERIFY 점수 표시 (record-score.js + 조회 화면)
+SOUL 버전마다 SOUL VERIFY 점수를 장부에 남기고, 조회 화면(`register/`)에서 **버전별 점수 표**로 보여 줍니다. 컨트랙트는 바꾸지 않고 기존 `recordCarryOver` / `getScores`를 씁니다. 설계는 [docs/roadmap_v2.md](docs/roadmap_v2.md) ④.
+
+```powershell
+# 기본은 DRY(출력만, 전송 없음). 체인은 읽기만 해서 soulHash·인자를 미리 검사합니다.
+node scripts/record-score.js --agent 1 --soul-hash 0x<64자리> --from-model <이전모델> --model <새모델> --score 0.82 --evidence-url https://doi.org/10.5281/zenodo.XXXXXXX
+node scripts/record-score.js --agent 1 --soul-file C:\path\SOUL.md --model <새모델> --score 0.82 --report-file C:\path\report.md   # 파일이 장부의 어느 버전과 같은지 자동 매칭(CRLF→LF 포함)
+
+# 실제 기록(트랜잭션)은 DRY=0 + 소유자 키(환경변수 IEUM_OWNER_KEY)가 있어야 하고, localhost 외 네트워크는 --allow-public 없이는 거부합니다.
+$env:DRY=0; $env:IEUM_OWNER_KEY="0x..."; node scripts/record-score.js --network localhost ... --save-evidence
+```
+- **인자**: `--agent`, `--soul-hash`(또는 `--soul-file`), `--model`(전환 후 모델, 64바이트 이하), `--from-model`(선택), `--score`(0~1 소수 → `scoreBps` = 반올림(점수×10000)), 근거 하나: `--evidence-url`(https, 200바이트 이하) / `--report-file` / `--report-hash`.
+- **근거 URL은 체인에 저장되지 않습니다**(컨트랙트에 URL 칸이 없음). `reportHash` = URL 문자열의 SHA-256(또는 보고서 파일 SHA-256)만 올라갑니다. 화면에 링크를 보여 주려면 `--save-evidence`로 `register/evidence.js`(`{reportHash: URL}`)에 병합하고 페이지를 배포하세요. 화면은 **sha256(URL) == reportHash**일 때만 링크를 겁니다(위조된 매핑은 지문만 표시).
+- **조회 화면**: 버전마다 `모델 전환 · 점수 · 근거 · 기록일` 표. 점수가 없으면 "아직 점수 없음 / No score yet". ko/en. 점수는 **소유자 자기 기록**이며 정체성이 이어졌다는 증명이 아니라는 문구가 함께 나옵니다.
+- 테스트: `npx hardhat test`(record-score 8개 포함, 전체 27개), `node test/e2e-register.js`(131개; 점수 값은 모두 **합성(SYNTHETIC) 예시**). 스크린샷: `docs/register/desktop-09-scores-ko.png`, `desktop-10-scores-en.png`(합성 값).
+- 한계: 소유자 지갑만 기록 가능(가스 필요). 서명 묶음 방식의 점수는 컨트랙트 변경이 필요해 후속.

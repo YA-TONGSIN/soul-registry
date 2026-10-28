@@ -158,6 +158,11 @@ async function main() {
     // ═════ desktop run ═════
     console.log("[ui] desktop 1280x900");
     const { ctx, page } = await newPage({ width: 1280, height: 900 });
+    // SYNTHETIC score evidence for the e2e (not real results): evidence.js is served with one valid and one forged mapping.
+    const EVID_URL = "https://example.org/synthetic-score-demo";
+    const EVID_HASH = "0x" + crypto.createHash("sha256").update(EVID_URL).digest("hex");
+    const FORGED_HASH = "0x" + crypto.createHash("sha256").update("some other report").digest("hex");
+    await ctx.route("**/evidence.js", (route) => route.fulfill({ contentType: "text/javascript", body: `window.IEUM_EVIDENCE = ${JSON.stringify({ [EVID_HASH]: EVID_URL, [FORGED_HASH]: "https://example.org/forged-link" })};` }));
     await page.goto("http://127.0.0.1:4173/?net=localhost");
     await page.waitForSelector("#net");
     const noticeText = await page.locator(".notice").innerText();
@@ -270,6 +275,17 @@ async function main() {
     check("over-length name (30 Korean chars = 90 bytes) blocked", /너무 깁니다/.test(await page.textContent("#directMsg")));
     await page.fill("#dName", "x");
 
+    // ④ SYNTHETIC scores for v1 only (written with scripts/record-score.js against the LOCAL node; values are made up for the test)
+    const { run: recordScore } = require("../scripts/record-score");
+    const ownerReg = new ethers.Contract(REGISTRY, art.abi, new ethers.NonceManager(new ethers.Wallet(KEYS[0], provider)));
+    const rsLog = [];
+    const rs = (args) => recordScore(args, { registry: ownerReg, env: { DRY: "0" }, log: (s) => rsLog.push(s) });
+    check("④ record-score DRY (default) sends nothing", (await recordScore(["--agent", "1", "--soul-hash", v1hash, "--model", "synthetic-B", "--score", "0.5", "--evidence-url", EVID_URL], { registry: ownerReg, env: {}, log: () => {} })) === 0 && (await reg.getScores(1n)).length === 0);
+    check("④ record-score sends score 1 (SYNTHETIC 0.8123, evidence URL hash)", (await rs(["--agent", "1", "--soul-hash", v1hash, "--from-model", "synthetic-A", "--model", "synthetic-B", "--score", "0.8123", "--evidence-url", EVID_URL])) === 0, rsLog.join("|"));
+    check("④ record-score sends score 2 (SYNTHETIC 0.5, hash only, no known URL)", (await rs(["--agent", "1", "--soul-hash", v1hash, "--from-model", "synthetic-B", "--model", "synthetic-C", "--score", "0.5", "--report-hash", "0x" + "ab".repeat(32)])) === 0, rsLog.join("|"));
+    check("④ record-score sends score 3 (SYNTHETIC 0.3, forged-link hash)", (await rs(["--agent", "1", "--soul-hash", v1hash, "--model", "synthetic-D", "--score", "0.3", "--report-hash", FORGED_HASH])) === 0, rsLog.join("|"));
+    check("④ scores are on-chain", (await reg.getScores(1n)).length === 3);
+
     // C: lookup + match
     await page.click("#tab-lookup");
     check("wallet card hidden on lookup tab", !(await page.locator("#walletCard").isVisible()));
@@ -280,6 +296,18 @@ async function main() {
     check("lookup: shows both versions", (await page.locator(".rec").count()) === 2);
     check("lookup: chosen file (v2) matches v2 (latest)", /v2/.test(await page.textContent("#matchResult")) && /가장 최근/.test(await page.textContent("#matchResult")));
     await page.screenshot({ path: path.join(SHOTS, "desktop-05-lookup-match.png"), fullPage: true });
+    // ④ score tables per version
+    check("④ v1 shows a score table with 3 rows, v2 shows 'No score yet' (ko)", (await page.locator("#scores1 tbody tr").count()) === 3 && (await page.textContent("#noScore2")) === "아직 점수 없음" && (await page.locator("#scores2").count()) === 0);
+    const rowsTxt = await page.locator("#scores1 tbody tr").allInnerTexts();
+    check("④ rows: models, score %, date", /synthetic-A → synthetic-B\s+81\.23%/.test(rowsTxt[0]) && /50\.00%/.test(rowsTxt[1]) && /\(미기재\) → synthetic-D\s+30\.00%/.test(rowsTxt[2]) && /UTC/.test(rowsTxt[0]), rowsTxt.join(" / "));
+    const hrefs4 = await page.$$eval("#scores1 a", (as) => as.map((a) => a.href + "|" + a.rel));
+    check("④ evidence link only where sha256(url)==reportHash (forged mapping not linked, https only)", hrefs4.length === 1 && hrefs4[0] === EVID_URL + "|noopener noreferrer" && (await page.locator("#scores1 code").count()) === 2, hrefs4.join(","));
+    check("④ self-report disclaimer shown", /소유자가 직접 남긴 기록/.test(await page.textContent("#scoreNote")));
+    await page.screenshot({ path: path.join(SHOTS, "desktop-09-scores-ko.png"), fullPage: true });
+    await page.click('[data-lang="en"]');
+    check("④ English: table headers + 'No score yet' + disclaimer", /Model switch/.test(await page.textContent("#scores1 thead")) && (await page.textContent("#noScore2")) === "No score yet" && /owner's own records/.test(await page.textContent("#scoreNote")) && (await page.textContent("#scores1 a")) === "View evidence");
+    await page.screenshot({ path: path.join(SHOTS, "desktop-10-scores-en.png"), fullPage: true });
+    await page.click('[data-lang="ko"]');
     await page.setInputFiles("#soulFile", v1);
     await page.waitForFunction(() => /v1/.test(document.getElementById("matchResult")?.textContent || ""));
     check("lookup: switching to v1 file matches v1", /v1/.test(await page.textContent("#matchResult")));

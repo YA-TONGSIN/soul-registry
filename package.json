@@ -11,7 +11,8 @@
         "demo:batch": "hardhat run scripts/demo-batch.js --network localhost",
         "history": "hardhat run scripts/history.js --network localhost",
         "estimate:cost": "node scripts/estimate-cost.js",
-        "check:soul": "node scripts/check-soul.js"
+        "check:soul": "node scripts/check-soul.js",
+        "record:score": "node scripts/record-score.js"
     },
     "keywords": [],
     "author": "",
