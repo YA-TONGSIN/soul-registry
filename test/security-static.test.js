@@ -25,6 +25,13 @@ describe("register/ static security", function () {
     }
   });
 
+  it("the public index.html CSP does not allow localhost (the e2e server adds it locally)", function () {
+    const html = fs.readFileSync(path.join(REG, "index.html"), "utf8");
+    const csp = (html.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || "";
+    expect(csp).to.match(/connect-src 'self'/);
+    expect(csp).to.not.match(/localhost|127\.0\.0\.1/);
+  });
+
   it("_headers sets anti-framing, nosniff and referrer policy", function () {
     const h = fs.readFileSync(path.join(REG, "_headers"), "utf8");
     expect(h).to.match(/X-Frame-Options: DENY/);

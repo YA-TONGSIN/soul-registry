@@ -17,7 +17,7 @@ GeekNews 공개 전 점검. 읽기와 로컬 분석만 했고, 운영 사이트�
 | 하드코딩된 비밀 값 | 낮음 | 해당없음 | `config.js`에는 공개 RPC 주소·컨트랙트 주소·익스플로러 주소만 있다. 테스트넷 키는 저장소 밖(`D:\openclaw-backup`)에 있고 `.gitignore`에 `*.key`, `.env`. |
 | git 이력의 키·토큰·비밀번호 | 높음(노출 시) | 해당없음 | 이력 전체(34 커밋)를 정규식(개인키 hex·PEM·니모닉·AWS·GitHub·Slack·OpenAI·Anthropic·Google·Cloudflare·Discord·password/secret 대입·Bearer)과 **실제 비밀 값 일치 검사**(`D:\openclaw-backup`의 토큰·키 파일 7개, 채점 사이트 `.dev.vars`)로 검사했다. 검출 0건. gitleaks는 설치돼 있지 않아 쓰지 않았고, PDF·PNG 같은 바이너리 내용은 검사 범위 밖이다. |
 | 의존성(npm audit) | 낮음 | 남김 | 47건(high 18, moderate 10, low 19, critical 0). 모두 devDependencies(hardhat·hardhat-toolbox와 그 하위: undici, ws, tmp, lodash, serialize-javascript, adm-zip 등)이다. 배포되는 `register/`에는 포함되지 않는다. 고치려면 hardhat 3 / hardhat-toolbox 7 메이저 업그레이드가 필요해서 자동 수정은 하지 않았다. 로컬 개발 도구로만 쓰는 동안은 위험이 낮다. |
-| CSP `connect-src`의 `http://127.0.0.1:*`, `http://localhost:*` | 낮음 | 남김 | 로컬 hardhat 노드 테스트용이다. 운영에서 공격 경로는 없지만(로컬 네트워크는 `config.js`에서 testnet 목록으로만 고름), 공개용 빌드에서 빼면 더 깔끔하다. e2e가 같은 `index.html`을 쓰므로 이번에는 바꾸지 않았다. |
+| CSP `connect-src`의 `http://127.0.0.1:*`, `http://localhost:*` | 낮음 | 수정됨(10-29 후속) | 로컬 hardhat 노드 테스트용이었다. 이제 `register/index.html`(공개 파일)의 CSP에는 localhost가 없다(`connect-src 'self' https://sepolia.base.org`). 로컬 e2e 4종은 자기 정적 서버가 `index.html`을 내줄 때만 localhost 허용을 끼워 넣는다. 새 static 테스트가 공개 CSP에 localhost가 없음을 확인한다. |
 | CORS `Access-Control-Allow-Origin: *` | 낮음 | 해당없음 | Cloudflare Pages 정적 파일 기본값이다. 인증·쿠키가 없는 공개 정적 파일이다. |
 
 ## 확인한 것
@@ -27,4 +27,4 @@ GeekNews 공개 전 점검. 읽기와 로컬 분석만 했고, 운영 사이트�
 
 ## 남은 일(사용자 결정)
 - hardhat 메이저 업그레이드(개발 도구만 해당)는 급하지 않다.
-- 공개용 빌드에서 `connect-src`의 localhost 허용을 뺄지.
+- (완료 10-29 후속) `connect-src`의 localhost 허용은 공개 파일에서 뺐다.

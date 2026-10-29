@@ -26,7 +26,9 @@ function serveStatic() {
     const f = path.join(REG_DIR, u === "/" ? "index.html" : u);
     if (!f.startsWith(REG_DIR) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { "content-type": types[path.extname(f)] || "application/octet-stream" });
-    res.end(fs.readFileSync(f));
+    // the public index.html CSP has no localhost; the local e2e server adds it so ?net=localhost can reach the hardhat node
+    const body = fs.readFileSync(f);
+    res.end(path.basename(f) === "index.html" ? Buffer.from(body.toString("utf8").replace("connect-src 'self' https://sepolia.base.org", "connect-src 'self' http://127.0.0.1:* http://localhost:* https://sepolia.base.org")) : body);
   });
   return new Promise((r) => srv.listen(4173, "127.0.0.1", () => r(srv)));
 }
