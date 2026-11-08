@@ -3,7 +3,6 @@
 | File | Package | License | Copyright |
 |---|---|---|---|
 | `ethers-6.17.0.umd.min.js` | ethers.js 6.17.0 (https://github.com/ethers-io/ethers.js) | MIT | Copyright (c) 2016-2025 Richard Moore |
-| `qrcode-generator-1.4.4.js` | qrcode-generator 1.4.4 (https://github.com/kazuhikoarase/qrcode-generator) | MIT (header kept in file) | Copyright (c) 2009 Kazuhiko Arase |
 | `abi.js` | generated from `contracts/SoulRegistry.sol` (this repository) | MIT | Copyright (c) 2026 Wunjong Shin |
 
 The minified ethers bundle is kept byte-identical to the upstream release, so its

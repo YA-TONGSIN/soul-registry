@@ -21,15 +21,8 @@
 window.IEUM_CONFIG = {
   defaultNetwork: "baseSepolia",
   // Footer (confirmed by the owner 2026-10-25 21:18). enabled=false hides the whole footer extra.
-  // donation: OFF by default. While enabled=false (or address/network/assets below fail validation)
-  // the footer link AND the page content stay hidden (donate.html then shows "coming soon").
-  // To turn on (owner decides, after confirming the address is self-checked on the right network):
-  //   address     — receiving address (EVM: 0x + 40 hex)
-  //   addressType — "evm" (strict 0x+40hex) or "other" (20-120 chars of A-Za-z0-9:_-. only)
-  //   network     — ONE specific network, e.g. { ko: "Base 메인넷 (체인 ID 8453)", en: "Base mainnet (chain ID 8453)" }
-  //   assets      — the only tokens accepted, e.g. ["USDC", "ETH"]
-  //   note        — optional extra line (ko/en)
-  //   enabled     — true
+  // Support = Buy Me a Coffee link only. Crypto donation was removed from the site on 2026-11-09 (owner decision);
+  // the old page/scripts live in archive/crypto-donation/ and are not deployed.
   footer: {
     enabled: true,
     maker: { ko: "만든 사람: 신운종 · 이음(Ieum)", en: "Made by Wunjong Shin · Ieum" },
@@ -41,15 +34,6 @@ window.IEUM_CONFIG = {
       enabled: true,
       url: "https://buymeacoffee.com/ilovebot", // owner-provided 2026-11-08
       label: { ko: "커피 한 잔으로 응원하기 ☕ (Buy Me a Coffee)", en: "Support with a coffee ☕ (Buy Me a Coffee)" },
-    },
-    donation: {
-      enabled: true, // owner confirmed 2026-10-26 08:11 (unit OK)
-      page: "donate.html",
-      address: "0x82F385D7698fAD15Ff14Ed6BB22F4a3B21C5CF43", // owner-provided 2026-10-26, dedicated donation MetaMask account
-      addressType: "evm",
-      network: { ko: "Base 메인넷 (체인 ID 8453)", en: "Base mainnet (chain ID 8453)" },
-      assets: ["USDC", "ETH"],
-      note: { ko: "", en: "" },
     },
   },
   allowMainnet: false, // keep false until the owner approves a public launch

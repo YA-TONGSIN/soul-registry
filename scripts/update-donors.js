@@ -3,16 +3,16 @@
 //   USDC  : eth_getLogs Transfer(to = donation address) on the public RPC (chunked, retried; the RPC rate-limits).
 //   ETH   : free Blockscout API txlist (no key). Failed txs and zero/dust amounts are ignored.
 // Names: data/donor-names.json (verified signatures, written by add-donor-name.js). Hide list: data/donor-hide.json.
-// Usage: node scripts/update-donors.js [--from <blockNumber>] [--out <file>] [--rpc <url>] [--blockscout <url>]
+// Usage: node scripts/update-donors.js --address 0x... [--from <blockNumber>] [--out <file>] [--rpc <url>] [--blockscout <url>]
 //   First run scans ~6 days back (the donation page went live 2026-10-26); later runs continue from `scannedTo`.
 const fs = require("fs");
 const path = require("path");
 const { ethers } = require("ethers");
-const DN = require("../register/donor-name.js");
+const DN = require("../archive/crypto-donation/donor-name.js");
 
 const ROOT = path.join(__dirname, "..");
-const cfgSrc = fs.readFileSync(path.join(ROOT, "register", "config.js"), "utf8");
-const ADDRESS = (cfgSrc.match(/donation:\s*\{[\s\S]*?address:\s*"(0x[0-9a-fA-F]{40})"/) || [])[1];
+// Crypto donation was removed from the site on 2026-11-09 (owner decision); this script is archived, reference only.
+const ADDRESS = (String(arg("--address", "")).match(/^0x[0-9a-fA-F]{40}$/) || [])[0];
 const CHAIN_ID = 8453;
 const USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // Circle: USDC on Base (developers.circle.com/stablecoins/usdc-contract-addresses)
 const TRANSFER = ethers.id("Transfer(address,address,uint256)");
@@ -23,7 +23,7 @@ function arg(name, def) { const i = process.argv.indexOf(name); return i > 0 ? p
 // mainnet.base.org answers eth_getLogs with 429 "request limit reached" (checked 2026-10-26), so a second public RPC is tried first/as fallback.
 const RPCS = arg("--rpc", "https://base-rpc.publicnode.com,https://mainnet.base.org").split(",");
 const BLOCKSCOUT = arg("--blockscout", "https://base.blockscout.com/api");
-const OUT = arg("--out", path.join(ROOT, "register", "donors.json"));
+const OUT = arg("--out", path.join(ROOT, "archive", "crypto-donation", "donors.json"));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function rpc(method, params) {
@@ -48,7 +48,7 @@ const iso = (sec) => new Date(Number(sec) * 1000).toISOString();
 function readJson(file, def) { try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch { return def; } }
 
 async function main() {
-  if (!ADDRESS) throw new Error("donation address not found in register/config.js");
+  if (!ADDRESS) throw new Error("pass --address 0x... (crypto donation is no longer configured on the site)");
   const head = parseInt(await rpc("eth_blockNumber", []), 16);
   const prev = readJson(OUT, null);
   const known = new Map(((prev && prev.donations) || []).map((d) => [key(d), d]));

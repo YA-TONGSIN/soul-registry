@@ -143,3 +143,40 @@ select, input, textarea { max-width: 100%; min-width: 0; }
 .use-card { margin-bottom: 0; } .use-card h3 { margin-top: 0; }
 .cmd { display: block; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; background: #f3eee6; padding: .5rem .6rem; border-radius: 6px; overflow-wrap: anywhere; word-break: break-all; }
 .evid { border-top: 1px dashed var(--line); padding-top: .4rem; margin-top: .6rem; }
+
+/* ── crayon night theme (2026-11-09) — matches 「다시, 너」·「처음, 너」: navy night, orange light, crayon art ── */
+:root {
+  --bg: #161a26; --card: #1e2333; --ink: #eceef3; --muted: #b6bdcc; --line: #363d52;
+  --accent: #f0a35e; --accent-ink: #1a1208; --ok: #93dfa8; --bad: #ff9f94; --warn-bg: #2e2717; --warn-line: #e3a845;
+  --notice-bg: #1b2540; --notice-line: #8aa6ff; --sunk: #12151f;
+}
+body { line-height: 1.7; background: radial-gradient(1200px 500px at 50% -120px, #23304d 0%, var(--bg) 70%) no-repeat, var(--bg); }
+a { color: #ffc58c; } a:visited { color: #f2b7d0; }
+h1 { color: #fff3e3; letter-spacing: .01em; }
+.skip:focus { background: var(--card); color: var(--ink); }
+input[type=text], input[type=number], textarea, select { background: var(--sunk); color: var(--ink); border-color: #5d6680; }
+::placeholder { color: #8f98ab; }
+.ghost, button.ghost, .seg, .tabs [role=tab] { background: transparent; color: var(--accent); }
+.tabs [role=tab] { color: var(--ink); }
+.seg[aria-pressed=true], .tabs [role=tab][aria-selected=true] { background: var(--accent); color: var(--accent-ink); }
+.testnet { color: #f3cf7a; }
+.wallet { background: #1a2032; border-color: #3a4560; }
+.box, .rec { background: var(--sunk); }
+.rec.match { background: #15291d; }
+.scores th, .scores td { border-bottom-color: var(--line); }
+.hero { background: var(--card); border-color: var(--accent); box-shadow: 0 0 0 1px rgba(240,163,94,.15), 0 10px 40px rgba(0,0,0,.25); }
+.hero-steps li { background: var(--sunk); border-color: var(--line); }
+.hero-art { display: flex; justify-content: center; gap: 1rem; margin: 0 0 1rem; }
+.hero-art img { width: min(46%, 240px); height: auto; border-radius: 50%; display: block; }
+.lin-node { background: var(--card); box-shadow: none; }
+.lin-node.head { background: #262638; }
+.lin-node::before { background: var(--card); }
+.lin-branch { background: #1e1c17; }
+.badge.selfrep { color: #f3cf7a; }
+.hex .dh { background: #4a1f1f; color: #ffb4ab; }
+.cmd { background: var(--sunk); color: #d9dee8; }
+.foot { color: var(--muted); }
+.also { margin-top: .6rem !important; }
+.coffee { margin: 1rem 0 .4rem; }
+.coffee .btn { text-decoration: none; color: var(--accent-ink); }
+.qr { background: #fff; }

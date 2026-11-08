@@ -75,6 +75,7 @@
     document.documentElement.lang = lang;
     document.title = t("title");
     document.querySelectorAll("[data-i18n]").forEach((n) => (n.textContent = t(n.dataset.i18n)));
+    document.querySelectorAll("[data-i18n-alt]").forEach((n) => (n.alt = t(n.dataset.i18nAlt)));
     document.querySelectorAll(".seg").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
     fillNetSelect();
     renderFooter();
@@ -97,9 +98,6 @@
       const a = el("a", { href: "mailto:" + f.contactEmail, text: f.contactEmail });
       cEl.replaceChildren(document.createTextNode(((f.contactLabel && f.contactLabel[lang]) || "") + ": "), a);
     }
-    const dEl = $("footDonation"), dState = window.IEUM_DONATION_CHECK(CFG);
-    dEl.hidden = !dState.ok;
-    if (dState.ok) dEl.replaceChildren(el("a", { href: dState.d.page, text: t("donateLink") }));
     const cfEl = $("footCoffee"), cf = window.IEUM_COFFEE_LINK(CFG);
     cfEl.hidden = !cf;
     if (cf) cfEl.replaceChildren(el("a", { href: cf.url, target: "_blank", rel: "noopener noreferrer", text: cf.label[lang] }));

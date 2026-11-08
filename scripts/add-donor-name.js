@@ -8,11 +8,11 @@
 const fs = require("fs");
 const path = require("path");
 const { ethers } = require("ethers");
-const DN = require("../register/donor-name.js");
+const DN = require("../archive/crypto-donation/donor-name.js");
 
 const ROOT = path.join(__dirname, "..");
 const NAMES = path.join(ROOT, "data", "donor-names.json");
-const DONORS = path.join(ROOT, "register", "donors.json");
+const DONORS = path.join(ROOT, "archive", "crypto-donation", "donors.json");
 
 // pure verification, also used by the e2e test: returns {ok:true, entry} | {ok:false, reason}
 function verify(signed, donations) {

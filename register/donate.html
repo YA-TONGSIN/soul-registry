@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- No external network: connect-src 'self' only lets this page read its own static donors.json; QR is drawn locally from vendor/qrcode-generator; name signing happens in the wallet, offline. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<!-- Support = one outbound Buy Me a Coffee link (config.js footer.coffee). No network, no widget, no tracking. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>후원 · 이음 장부 / Support · Ieum Ledger</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -28,75 +28,15 @@
   <section class="card">
     <p class="good" id="donFree"></p>
     <p data-i18n="donIntro"></p>
-
-    <p id="donCoffee" hidden></p>
-
-    <div id="donOff" class="box">
-      <p data-i18n="donSoon"></p>
-    </div>
-
-    <div id="donOn" hidden>
-      <div class="warn" role="alert">
-        <strong data-i18n="donWarnTitle"></strong>
-        <p id="donWarn"></p>
-        <p id="donExchange"></p>
-      </div>
-
-      <dl class="kv">
-        <dt data-i18n="donNetworkLbl"></dt><dd id="donNetwork"></dd>
-        <dt data-i18n="donAssetsLbl"></dt><dd id="donAssets"></dd>
-        <dt data-i18n="donAddressLbl"></dt><dd><code id="donAddress"></code></dd>
-      </dl>
-      <div class="row">
-        <button type="button" id="copyBtn" class="btn" data-i18n="donCopy"></button>
-      </div>
-      <p id="copyMsg" class="msg" role="status" aria-live="polite"></p>
-      <div id="qrBox" class="qr"></div>
-      <p class="help" data-i18n="donQrHelp"></p>
-      <p id="donNote" class="help" hidden></p>
-
-      <ul class="donfacts">
-        <li data-i18n="donOptional"></li>
-        <li data-i18n="donPublic"></li>
-        <li data-i18n="donNoRefund"></li>
-      </ul>
-    <section id="donors" class="donors" aria-labelledby="donorsH">
-      <h2 id="donorsH" data-i18n="donorsTitle"></h2>
-      <p id="donorsTotal" class="good" hidden></p>
-      <p id="donorsEmpty" class="help" hidden></p>
-      <p id="donorsFail" class="msg err" hidden></p>
-      <ul id="donorsList" class="donorlist"></ul>
-      <p id="donorsUpdated" class="help" hidden></p>
-      <p class="help" data-i18n="donorsNote"></p>
-    </section>
-
-    <section id="signSec" class="sign" aria-labelledby="signH">
-      <h2 id="signH" data-i18n="signTitle"></h2>
-      <p data-i18n="signIntro"></p>
-      <ul class="donfacts"><li data-i18n="signRules"></li><li data-i18n="signNoName"></li></ul>
-      <div id="signNoWallet" class="box" hidden><p data-i18n="signNoWallet"></p></div>
-      <div id="signForm">
-        <label for="signName" data-i18n="signNameLbl"></label>
-        <input id="signName" type="text" maxlength="40" autocomplete="off">
-        <label for="signTx" data-i18n="signTxLbl"></label>
-        <input id="signTx" type="text" maxlength="80" autocomplete="off" placeholder="0x…" spellcheck="false">
-        <div class="row"><button type="button" id="signBtn" class="btn" data-i18n="signBtn"></button></div>
-        <p id="signMsg" class="msg" role="status" aria-live="polite"></p>
-        <p class="help"><span data-i18n="signSend"></span> <a id="signMail" href="#"></a></p>
-      </div>
-    </section>
-    </div>
+    <p id="donCoffee" class="coffee" hidden></p>
   </section>
 </main>
 
-<footer class="foot"><p data-i18n="footerNote"></p></footer>
+<footer class="foot"><p data-i18n="footerNote"></p><p class="also"><span data-i18n="alsoBy"></span> <a href="https://dasi-neo.pages.dev/" target="_blank" rel="noopener">다시, 너</a> · <a href="https://cheoeum-neo.pages.dev/" target="_blank" rel="noopener">처음, 너</a></p></footer>
 
 <script src="config.js"></script>
 <script src="i18n.js"></script>
-<script src="donate-check.js"></script>
 <script src="coffee-link.js"></script>
-<script src="donor-name.js"></script>
-<script src="vendor/qrcode-generator-1.4.4.js"></script>
-<script src="donate.js"></script>
+<script src="support.js"></script>
 </body>
 </html>

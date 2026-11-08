@@ -37,7 +37,7 @@ async function waitRpc() {
 }
 
 function serveStatic() {
-  const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css", ".md": "text/plain" };
+  const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css", ".md": "text/plain", ".webp": "image/webp" };
   const srv = http.createServer((req, res) => {
     const u = decodeURIComponent(req.url.split("?")[0]);
     const f = path.join(REG_DIR, u === "/" ? "index.html" : u);
@@ -177,7 +177,7 @@ async function main() {
     check("footer en text", (await page.textContent("#footMaker")) === "Made by Wunjong Shin · Ieum" && (await page.textContent("#footContact")) === "Contact: dkakrptehsrk@gmail.com" && (await page.textContent("#footFree")) === "This ledger is free.");
     await page.click('[data-lang="ko"]');
     check("language toggle back -> Korean", /절대 올라가지/.test(await page.locator(".notice").innerText()));
-    check("footer ko: maker / contact mailto / free line; support link shown (donation on)", (await page.textContent("#footMaker")) === "만든 사람: 신운종 · 이음(Ieum)" && (await page.textContent("#footContact")) === "문의: dkakrptehsrk@gmail.com" && (await page.getAttribute("#footContact a", "href")) === "mailto:dkakrptehsrk@gmail.com" && (await page.textContent("#footFree")) === "이 장부는 무료입니다." && await page.locator("#footDonation").isVisible() && (await page.locator('a[href="donate.html"]').count()) === 1);
+    check("footer ko: maker / contact mailto / free line; no crypto support link", (await page.textContent("#footMaker")) === "만든 사람: 신운종 · 이음(Ieum)" && (await page.textContent("#footContact")) === "문의: dkakrptehsrk@gmail.com" && (await page.getAttribute("#footContact a", "href")) === "mailto:dkakrptehsrk@gmail.com" && (await page.textContent("#footFree")) === "이 장부는 무료입니다." && (await page.locator('a[href="donate.html"]').count()) === 0);
     check("footer coffee link (ko): new tab, noopener noreferrer, exact URL", (await page.getAttribute("#footCoffee a", "href")) === "https://buymeacoffee.com/ilovebot" && (await page.getAttribute("#footCoffee a", "target")) === "_blank" && (await page.getAttribute("#footCoffee a", "rel")) === "noopener noreferrer" && (await page.textContent("#footCoffee a")).includes("커피 한 잔으로 응원하기"));
     check("network select shows localhost", (await page.inputValue("#net")) === "localhost");
     const unlabeled = await page.evaluate(() => [...document.querySelectorAll("input,select,textarea")].filter((e) => !e.labels?.length && !e.getAttribute("aria-label") && e.type !== "radio" && e.type !== "checkbox" || (e.type === "checkbox" && !e.closest("label"))).map((e) => e.id));
@@ -422,248 +422,55 @@ async function main() {
     }
     await m.ctx.close();
 
-    // ═════ donation page ═════
-    console.log("[donate] footer link + donate.html");
-    const dsrc = fs.readFileSync(path.join(REG_DIR, "donate.js"), "utf8") + fs.readFileSync(path.join(REG_DIR, "donate-check.js"), "utf8");
-    const dsrcNoFetch = dsrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/fetch\("donors\.json", \{ cache: "no-store", credentials: "omit" \}\)/g, "");
-    check("donate.js/donate-check.js: only network use is fetch of the static donors.json (no XHR/sendBeacon/WebSocket/other fetch)", !forbidden.test(dsrcNoFetch) && (dsrc.match(/\bfetch\(/g) || []).length === 1);
-    check("donor-name.js / add-donor-name.js verifier have no network code", !forbidden.test(fs.readFileSync(path.join(REG_DIR, "donor-name.js"), "utf8")) && !/\bfetch\b|https?:\/\//.test(fs.readFileSync(path.join(ROOT, "scripts", "add-donor-name.js"), "utf8")));
+    // ═════ support page (Buy Me a Coffee only; crypto donation removed 2026-11-09) ═════
+    console.log("[support] BMC-only donate.html, no crypto anywhere in the deployed site");
+    const WALLET = "0x82F385D7698fAD15Ff14Ed6BB22F4a3B21C5CF43"; // the removed donation address must not appear in any deployed file
+    const deployed = [];
+    (function walk(d) { for (const n of fs.readdirSync(d)) { const p = path.join(d, n); if (fs.statSync(p).isDirectory()) walk(p); else deployed.push(p); } })(REG_DIR);
+    const walletLeaks = deployed.filter((p) => /\.(html|js|json|css|md|xml|txt)$/.test(p) && fs.readFileSync(p, "utf8").toLowerCase().includes(WALLET.toLowerCase()));
+    check("no deployed file contains the removed donation address", walletLeaks.length === 0, walletLeaks.join(","));
+    check("no crypto-donation files are deployed (donate.js / donate-check.js / donor-name.js / donors.json / QR lib)", !["donate.js", "donate-check.js", "donor-name.js", "donors.json", "vendor/qrcode-generator-1.4.4.js"].some((n) => fs.existsSync(path.join(REG_DIR, n))));
+    check("config.js has no donation block", !/donation\s*:/.test(config));
     const donHtml = fs.readFileSync(path.join(REG_DIR, "donate.html"), "utf8");
     const donCsp = (donHtml.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || "";
-    check("donate.html CSP: connect-src is exactly 'self' (no external origins anywhere in the CSP)", /connect-src 'self';/.test(donCsp) && !/https?:|\*/.test(donCsp), donCsp);
-    check("committed register/donors.json is valid (only tx/from/amount-type fields)", (() => { const j = JSON.parse(fs.readFileSync(path.join(REG_DIR, "donors.json"), "utf8")); return j.chainId === 8453 && Array.isArray(j.donations) && j.donations.every((d) => Object.keys(d).every((k) => ["txHash", "logIndex", "time", "token", "amount", "raw", "decimals", "from", "name"].includes(k))); })());
-    check("real config.js donation: enabled with the owner address on Base", /donation:\s*\{\s*enabled: true,/.test(config) && config.includes("0x82F385D7698fAD15Ff14Ed6BB22F4a3B21C5CF43"));
-
-    const TEST_ADDR = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"; // hardhat default account #1 (public, worthless)
-    const ON = { enabled: true, page: "donate.html", address: TEST_ADDR, addressType: "evm", network: { ko: "Base 메인넷 (체인 ID 8453)", en: "Base mainnet (chain ID 8453)" }, assets: ["USDC", "ETH"], note: { ko: "", en: "" } };
-    async function donPage(viewport, donation, opts = {}) {
-      const dctx = await browser.newContext({ viewport, locale: "ko-KR", permissions: ["clipboard-read", "clipboard-write"], acceptDownloads: true });
-      if (opts.donors !== undefined) await dctx.route("**/donors.json", (route) => opts.donors === null ? route.fulfill({ status: 404, body: "no" }) : route.fulfill({ contentType: "application/json", body: JSON.stringify(opts.donors) }));
-      if (opts.wallet !== undefined) {
-        const ws = KEYS.map((k) => new ethers.Wallet(k));
-        await dctx.exposeFunction("__rpc", async (m, p) => {
-          if (m === "eth_requestAccounts") return { result: [ws[opts.wallet].address.toLowerCase()] };
-          if (m === "personal_sign") return { result: await ws[opts.wallet].signMessage(ethers.toUtf8String(p[0])) };
-          return { error: { code: -32601, message: "unsupported " + m } };
-        });
-        await dctx.addInitScript(MOCK_INIT);
-      }
-      if (donation) await dctx.route("**/config.js", (route) => route.fulfill({ contentType: "text/javascript", body: config + `\nwindow.IEUM_CONFIG.footer.donation = ${JSON.stringify(donation)};\n` }));
-      const dpage = await dctx.newPage();
-      const reqs = [];
-      dpage.on("request", (r) => reqs.push(r.url()));
-      dpage.on("pageerror", (e) => console.log("  [pageerror]", e.message));
-      return { dctx, dpage, reqs };
-    }
-
-    // (a) default (off): no link on the register page, "coming soon" on the page, no address / QR / warning
-    const off = await donPage({ width: 1280, height: 900 }, { ...ON, enabled: false });
-    await off.dpage.goto("http://127.0.0.1:4173/?net=localhost");
-    await off.dpage.waitForSelector("#net");
-    check("OFF: footer shows no support link", await off.dpage.locator("#footDonation").isHidden() && (await off.dpage.locator('a[href="donate.html"]').count()) === 0);
-    await off.dpage.goto("http://127.0.0.1:4173/donate.html");
-    await off.dpage.waitForSelector("#donOff");
-    check("OFF: donate.html says coming soon", await off.dpage.locator("#donOff").isVisible() && /준비 중/.test(await off.dpage.locator("#donOff").innerText()));
-    check("OFF: donate.html shows no address / QR / warning / copy button", await off.dpage.locator("#donOn").isHidden() && !(await off.dpage.content()).includes(TEST_ADDR) && (await off.dpage.locator("#qrBox svg").count()) === 0 && await off.dpage.locator("#copyBtn").isHidden());
-    await off.dpage.screenshot({ path: path.join(SHOTS, "donate-off-desktop-ko.png") });
-    await off.dctx.close();
-
-    // enabled but invalid -> still hidden (bad address, bad type, missing network/assets, non-https-style page)
-    const bads = [
-      ["EVM address too short", { ...ON, address: TEST_ADDR.slice(0, 40) }],
-      ["EVM address with non-hex", { ...ON, address: "0x" + "z".repeat(40) }],
-      ["empty address", { ...ON, address: "" }],
-      ["unknown addressType", { ...ON, addressType: "foo" }],
-      ["no network text", { ...ON, network: { ko: "", en: "Base" } }],
-      ["no assets", { ...ON, assets: [] }],
-      ["page with a path/scheme", { ...ON, page: "https://evil.example/x.html" }],
-      ["enabled=\"true\" string", { ...ON, enabled: "true" }],
-      ["other-type address with spaces", { ...ON, addressType: "other", address: "bc1 not an address at all really" }],
-    ];
-    for (const [name, cfgBad] of bads) {
-      const b = await donPage({ width: 1280, height: 900 }, cfgBad);
-      await b.dpage.goto("http://127.0.0.1:4173/?net=localhost");
-      await b.dpage.waitForSelector("#net");
-      const linkHidden = await b.dpage.locator("#footDonation").isHidden();
-      await b.dpage.goto("http://127.0.0.1:4173/donate.html");
-      await b.dpage.waitForSelector("#donOff");
-      const hidden = await b.dpage.locator("#donOn").isHidden() && (await b.dpage.locator("#qrBox svg").count()) === 0;
-      check(`INVALID (${name}): no link, page stays "coming soon"`, linkHidden && hidden);
-      await b.dctx.close();
-    }
-    // a valid non-EVM address passes the simple check
-    const okOther = await donPage({ width: 1280, height: 900 }, { ...ON, addressType: "other", address: "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE", network: { ko: "트론", en: "TRON" }, assets: ["USDT"] });
-    await okOther.dpage.goto("http://127.0.0.1:4173/donate.html");
-    await okOther.dpage.waitForSelector("#donAddress");
-    check("other-type address (TRON-style) is accepted by the simple check", await okOther.dpage.locator("#donOn").isVisible() && (await okOther.dpage.textContent("#donAddress")) === "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE");
-    await okOther.dctx.close();
-
-    // (b) ON with the public test address
-    const on = await donPage({ width: 1280, height: 900 }, ON);
-    await on.dpage.goto("http://127.0.0.1:4173/?net=localhost");
-    await on.dpage.waitForSelector("#net");
-    check("ON: footer shows the support link to donate.html", await on.dpage.locator("#footDonation a").isVisible() && (await on.dpage.getAttribute("#footDonation a", "href")) === "donate.html" && (await on.dpage.textContent("#footDonation a")) === "후원하기");
-    await on.dpage.click('[data-lang="en"]');
-    check("ON: footer link label in English = Support", (await on.dpage.textContent("#footDonation a")) === "Support");
-    await on.dpage.click('[data-lang="ko"]');
-    await on.dpage.click("#footDonation a");
-    await on.dpage.waitForSelector("#donAddress");
-    check("ON: address shown exactly", (await on.dpage.textContent("#donAddress")) === TEST_ADDR);
-    const warnKo = await on.dpage.locator(".warn").innerText();
-    check("ON: network warning names the network, tokens and the loss risk (ko)", /Base 메인넷/.test(warnKo) && /USDC \/ ETH/.test(warnKo) && /되찾을 수 없습니다/.test(warnKo) && /출금 네트워크/.test(warnKo), warnKo.slice(0, 60));
-    const pageKo = await on.dpage.locator("main").innerText();
-    check("ON: states free / optional-no-benefit / public-chain / irreversible (ko)", /무료/.test(pageKo) && /대가·권한·우선 등록/.test(pageKo) && /블록체인 거래는 공개/.test(pageKo) && /되돌릴 수 없습니다/.test(pageKo));
-    check("ON: warning appears above the address", (await on.dpage.locator(".warn").boundingBox()).y < (await on.dpage.locator("#donAddress").boundingBox()).y);
-    const qrInfo = await on.dpage.evaluate(() => { const s = document.querySelector("#qrBox svg"); const d = s && s.querySelector("path").getAttribute("d"); return { ok: !!s, len: d ? d.length : 0, w: s ? s.getBoundingClientRect().width : 0, label: s && s.getAttribute("aria-label") }; });
-    check("ON: QR rendered locally as SVG (non-trivial, labelled)", qrInfo.ok && qrInfo.len > 500 && qrInfo.w > 100 && !!qrInfo.label, JSON.stringify(qrInfo));
-    // QR content: decode with the browser's BarcodeDetector when available
-    const svgMarkup = await on.dpage.evaluate(() => document.querySelector("#qrBox svg").outerHTML);
-    const dec = await browser.newPage();
-    const decoded = await dec.evaluate(async (svg) => {
-      if (!("BarcodeDetector" in window)) return { unsupported: true };
-      const img = new Image(); img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"'));
-      await img.decode();
-      const cv = document.createElement("canvas"); cv.width = 400; cv.height = 400; cv.getContext("2d").drawImage(img, 0, 0, 400, 400);
-      const r = await new BarcodeDetector({ formats: ["qr_code"] }).detect(cv);
-      return { text: r[0] && r[0].rawValue };
-    }, svgMarkup).catch((e) => ({ err: String(e) }));
-    if (decoded.unsupported || decoded.err) console.log("  (note) QR decode skipped:", decoded.unsupported ? "BarcodeDetector unavailable" : decoded.err);
-    else check("ON: QR decodes to exactly the address", decoded.text === TEST_ADDR, decoded.text);
-    await dec.close();
-    // copy
-    await on.dpage.click("#copyBtn");
-    await on.dpage.waitForFunction(() => /복사했습니다/.test(document.getElementById("copyMsg").textContent));
-    check("ON: copy button puts the exact address on the clipboard", (await on.dpage.evaluate(() => navigator.clipboard.readText())) === TEST_ADDR);
-    await on.dpage.screenshot({ path: path.join(SHOTS, "donate-desktop-ko.png"), fullPage: true });
-    await on.dpage.click('[data-lang="en"]');
-    const warnEn = await on.dpage.locator(".warn").innerText();
-    check("ON: English warning names network + tokens + loss risk", /Base mainnet/.test(warnEn) && /USDC \/ ETH/.test(warnEn) && /lose the funds/.test(warnEn) && /withdrawal network/.test(warnEn), warnEn.slice(0, 60));
-    check("ON: English page states optional / public / irreversible", /Support is optional/.test(await on.dpage.locator("main").innerText()) && /public/.test(await on.dpage.locator("main").innerText()) && /cannot be undone/.test(await on.dpage.locator("main").innerText()));
-    check("ON: language persists to the register page footer link (Support)", (await on.dpage.evaluate(() => localStorage.getItem("ieum-lang"))) === "en");
-    await on.dpage.screenshot({ path: path.join(SHOTS, "donate-desktop-en.png"), fullPage: true });
-    const ownOrigins = new Set(on.reqs.map((u) => new URL(u).origin));
-    check("ON: no external network request (only the local static server)", [...ownOrigins].every((o) => o === "http://127.0.0.1:4173"), [...ownOrigins].join(","));
-    await on.dctx.close();
-    // mobile 390
-    const onm = await donPage({ width: 390, height: 844 }, ON);
-    await onm.dpage.goto("http://127.0.0.1:4173/donate.html");
-    await onm.dpage.waitForSelector("#donAddress");
-    check("mobile: donate page has no horizontal overflow", (await onm.dpage.evaluate(() => document.documentElement.scrollWidth)) <= 390);
-    await onm.dpage.screenshot({ path: path.join(SHOTS, "donate-mobile-390-ko.png"), fullPage: true });
-    await onm.dpage.click('[data-lang="en"]');
-    await onm.dpage.screenshot({ path: path.join(SHOTS, "donate-mobile-390-en.png"), fullPage: true });
-    await onm.dctx.close();
-
-    // ═════ donor list + opt-in names ═════
-    console.log("[donors] list, totals, anonymity, opt-in signed names");
-    const { verify } = require("../scripts/add-donor-name.js");
-    const DNm = require("../register/donor-name.js");
-    const ADDR0 = new ethers.Wallet(KEYS[0]).address, ADDR1 = new ethers.Wallet(KEYS[1]).address; // hardhat #0/#1 (public test keys)
-    const TXA = "0x" + "a1".repeat(32), TXB = "0x" + "b2".repeat(32), TXC = "0x" + "c3".repeat(32);
-    const MOCK_DON = { version: 1, chainId: 8453, address: TEST_ADDR, updatedAt: "2026-10-27T01:02:03.000Z", scannedTo: 1, donations: [
-      { txHash: TXB, time: "2026-10-27T00:10:00.000Z", token: "ETH", amount: "0.01", raw: "10000000000000000", decimals: 18, from: ADDR1, name: "하늘" },
-      { txHash: TXA, logIndex: 3, time: "2026-10-26T09:00:00.000Z", token: "USDC", amount: "5.0", raw: "5000000", decimals: 6, from: ADDR0 },
-      { txHash: TXC, logIndex: 1, time: "2026-10-26T08:00:00.000Z", token: "USDC", amount: "2.5", raw: "2500000", decimals: 6, from: ADDR0, name: "<img src=x onerror=alert(1)>" },
-    ] };
-    const dn = await donPage({ width: 1280, height: 900 }, ON, { donors: MOCK_DON, wallet: 1 });
-    const dreqs = [];
-    dn.dpage.on("request", (r) => dreqs.push(r.url()));
-    await dn.dpage.goto("http://127.0.0.1:4173/donate.html");
-    await dn.dpage.waitForSelector("#donorsList li");
-    const rowsKo = await dn.dpage.locator("#donorsList li").allInnerTexts();
-    check("list: 3 rows, newest first (named 하늘 first)", rowsKo.length === 3 && /^하늘/.test(rowsKo[0]) && /0\.01 ETH/.test(rowsKo[0]) && /2026-10-27/.test(rowsKo[0]), rowsKo.join(" / "));
-    const short0 = DNm.shortAddr(ADDR0);
-    check("list: unsigned donor shown as anonymous with short address + amount + date", rowsKo[1].includes(`익명 후원자 (${short0})`) && /5\.00 USDC/.test(rowsKo[1]) && /2026-10-26/.test(rowsKo[1]), rowsKo[1]);
-    check("list: hostile/invalid name falls back to anonymous and injects no element", /익명 후원자/.test(rowsKo[2]) && (await dn.dpage.locator("#donorsList img").count()) === 0 && !rowsKo[2].includes("onerror"), rowsKo[2]);
-    check("list: totals per token (7.50 USDC + 0.01 ETH)", /7\.50 USDC \+ 0\.01 ETH/.test(await dn.dpage.textContent("#donorsTotal")), await dn.dpage.textContent("#donorsTotal"));
-    const hrefs = await dn.dpage.$$eval("#donorsList a", (as) => as.map((a) => a.href + "|" + a.rel));
-    check("list: basescan tx links (noopener noreferrer)", hrefs[0] === `https://basescan.org/tx/${TXB}|noopener noreferrer`, hrefs[0]);
-    check("list: states updated date", /2026-10-27/.test(await dn.dpage.textContent("#donorsUpdated")));
-    await dn.dpage.screenshot({ path: path.join(SHOTS, "donors-list-desktop-ko.png"), fullPage: true });
-    await dn.dpage.click('[data-lang="en"]');
-    const rowsEn = await dn.dpage.locator("#donorsList li").allInnerTexts();
-    check("list (en): Anonymous supporter + View transaction + Received so far", rowsEn[1].includes(`Anonymous supporter (${short0})`) && /View transaction/.test(rowsEn[1]) && /Received so far: 7\.50 USDC \+ 0\.01 ETH/.test(await dn.dpage.textContent("#donorsTotal")), rowsEn[1]);
-    check("list: only the local origin was contacted (donors.json is a same-origin GET)", dreqs.every((u) => new URL(u).origin === "http://127.0.0.1:4173") && dreqs.some((u) => u.endsWith("/donors.json")), dreqs.join(","));
-    await dn.dpage.click('[data-lang="ko"]');
-
-    // signing: wallet #1 (the sender of TXB) signs a name -> downloaded JSON -> operator verifier accepts
-    await dn.dpage.fill("#signName", "하늘 님");
-    await dn.dpage.fill("#signTx", TXB.toUpperCase().replace("0X", "0x"));
-    const [dlFile] = await Promise.all([dn.dpage.waitForEvent("download"), dn.dpage.click("#signBtn")]);
-    const signedPath = path.join(tmp, "signed1.json");
-    await dlFile.saveAs(signedPath);
-    const signed = JSON.parse(fs.readFileSync(signedPath, "utf8"));
-    check("sign: file has name/tx/signer/message/signature and the exact EIP-191 message", signed.name === "하늘 님" && signed.txHash === TXB && signed.signer.toLowerCase() === ADDR1.toLowerCase() && signed.message === `Ieum Ledger donor name: 하늘 님 | tx: ${TXB}` && /^0x[0-9a-f]{130}$/i.test(signed.signature), JSON.stringify(signed).slice(0, 160));
-    const okMsg = await dn.dpage.textContent("#signMsg");
-    check("sign: page tells the donor to email the file", /문의 메일/.test(okMsg) && (await dn.dpage.getAttribute("#signMail", "href")) === "mailto:dkakrptehsrk@gmail.com", okMsg);
-    const don = MOCK_DON.donations.map((d) => ({ ...d, txHash: d.txHash.toLowerCase() }));
-    const v = verify(signed, don);
-    check("add-donor-name: genuine signature accepted (signer == tx sender)", v.ok === true && v.entry.name === "하늘 님", JSON.stringify(v));
-    const badSig = (label, obj, exp) => { const r = verify(obj, don); check(`add-donor-name rejects: ${label}`, r.ok === false && (!exp || r.reason.includes(exp)), r.reason); };
-("message edited after signing (name/message mismatch)", { ...signed, name: "다른이름" }, "message does not match");
-("name AND message rewritten, old signature kept", { ...signed, name: "다른이름", message: DNm.message("다른이름", TXB) }, "signer");
-("signature from a different wallet (not the sender)", (() => { const w0 = new ethers.Wallet(KEYS[0]); const m = DNm.message("하늘 님", TXB); return { ...signed, signer: w0.address, signature: w0.signMessageSync(m) }; })(), "not the sender");
-("signer field claims the sender but signature is from another key", (() => { const w0 = new ethers.Wallet(KEYS[0]); return { ...signed, signature: w0.signMessageSync(signed.message) }; })(), "does not match signer");
-("signature for another tx reused", { ...signed, txHash: TXA, message: DNm.message("하늘 님", TXA) }, "signer");
-("tx not in donors.json", (() => { const w1 = new ethers.Wallet(KEYS[1]); const tx = "0x" + "d4".repeat(32); const m = DNm.message("하늘", tx); return { name: "하늘", txHash: tx, signer: w1.address, message: m, signature: w1.signMessageSync(m) }; })(), "not in donors.json");
-("garbage signature", { ...signed, signature: "0x1234" }, "bad signature");
-    for (const [nm, why] of [["http evil", "bad"], ["a@b.co", "chars"], ["call 01012345678", "digits"], ["씨발", "bad"], ["", "empty"], ["가".repeat(25), "long"], ["tel|x", "chars"]]) {
-      const w1 = new ethers.Wallet(KEYS[1]); const m = DNm.message(nm, TXB);
-      const r = verify({ name: nm, txHash: TXB, signer: w1.address, message: m, signature: w1.signMessageSync(m) }, don);
-      check(`add-donor-name rejects name "${nm.slice(0, 16)}" (${why})`, r.ok === false && r.reason.includes(why), r.reason);
-    }
-    // page-side validation: URL name blocked before the wallet is even asked
-    await dn.dpage.fill("#signName", "http://evil.example");
-    let downloaded = false; dn.dpage.once("download", () => { downloaded = true; });
-    await dn.dpage.click("#signBtn");
-    check("sign: URL-like name is refused on the page with a message, no file", /글자·숫자·공백/.test(await dn.dpage.textContent("#signMsg")) && !downloaded);
-    await dn.dpage.fill("#signName", "하늘"); await dn.dpage.fill("#signTx", "0x1234");
-    await dn.dpage.click("#signBtn");
-    check("sign: malformed tx hash refused", /거래 해시 형식/.test(await dn.dpage.textContent("#signMsg")));
-    await dn.dpage.click('[data-lang="en"]');
-    check("sign: after switching to EN the shown tx-hash error is re-translated", /transaction hash format/i.test(await dn.dpage.textContent("#signMsg")) && !/[가-힣]/.test(await dn.dpage.textContent("#signMsg")));
-    await dn.dpage.screenshot({ path: path.join(SHOTS, "donors-sign-desktop-en.png"), fullPage: true });
-    await dn.dctx.close();
-
-    // connected wallet != tx sender -> page refuses (no file)
-    const wrong = await donPage({ width: 1280, height: 900 }, ON, { donors: MOCK_DON, wallet: 0 });
-    await wrong.dpage.goto("http://127.0.0.1:4173/donate.html");
-    await wrong.dpage.waitForSelector("#donorsList li");
-    await wrong.dpage.fill("#signName", "하늘"); await wrong.dpage.fill("#signTx", TXB);
-    let wrongDl = false; wrong.dpage.once("download", () => { wrongDl = true; });
-    await wrong.dpage.click("#signBtn");
-    await wrong.dpage.waitForFunction(() => document.getElementById("signMsg").textContent.length > 0);
-    check("sign: wallet that is not the sender is refused, no file", /보낸 주소와 다릅니다/.test(await wrong.dpage.textContent("#signMsg")) && !wrongDl);
-    await wrong.dctx.close();
-
-    // empty list, load failure, no wallet
-    const emp = await donPage({ width: 1280, height: 900 }, ON, { donors: { version: 1, chainId: 8453, donations: [] } });
-    await emp.dpage.goto("http://127.0.0.1:4173/donate.html");
-    await emp.dpage.waitForFunction(() => !document.getElementById("donorsEmpty").hidden);
-    check("empty: plain 'no supporters yet' text, no list, no total", /아직 후원이 없어요\. 첫 후원자가 되어 주세요/.test(await emp.dpage.textContent("#donorsEmpty")) && (await emp.dpage.locator("#donorsList li").count()) === 0 && await emp.dpage.locator("#donorsTotal").isHidden());
-    check("no wallet in browser: sign form hidden, explanation shown", await emp.dpage.locator("#signNoWallet").isVisible() && await emp.dpage.locator("#signForm").isHidden());
-    await emp.dpage.screenshot({ path: path.join(SHOTS, "donors-empty-desktop-ko.png"), fullPage: true });
-    await emp.dpage.click('[data-lang="en"]');
-    check("empty (en): 'No supporters yet. Be the first.'", /No supporters yet\. Be the first\./.test(await emp.dpage.textContent("#donorsEmpty")));
-    await emp.dctx.close();
-    const nf = await donPage({ width: 1280, height: 900 }, ON, { donors: null });
-    await nf.dpage.goto("http://127.0.0.1:4173/donate.html");
-    await nf.dpage.waitForFunction(() => !document.getElementById("donorsFail").hidden);
-    check("load failure: shows a plain error, address/QR still shown", /불러오지 못했어요/.test(await nf.dpage.textContent("#donorsFail")) && await nf.dpage.locator("#donAddress").isVisible());
-    await nf.dctx.close();
-    const mob = await donPage({ width: 390, height: 844 }, ON, { donors: MOCK_DON, wallet: 1 });
-    await mob.dpage.goto("http://127.0.0.1:4173/donate.html");
-    await mob.dpage.waitForSelector("#donorsList li");
-    check("mobile: donor list page has no horizontal overflow", (await mob.dpage.evaluate(() => document.documentElement.scrollWidth)) <= 390);
-    await mob.dpage.screenshot({ path: path.join(SHOTS, "donors-list-mobile-390-ko.png"), fullPage: true });
-    await mob.dctx.close();
-    // the generated file in the repo itself (what is deployed)
-    const real = await donPage({ width: 1280, height: 900 }, ON);
-    await real.dpage.goto("http://127.0.0.1:4173/donate.html");
-    await real.dpage.waitForFunction(() => !document.getElementById("donorsEmpty").hidden || !document.getElementById("donorsFail").hidden || document.querySelectorAll("#donorsList li").length > 0);
-    const realJson = JSON.parse(fs.readFileSync(path.join(REG_DIR, "donors.json"), "utf8"));
-    check("committed donors.json renders consistently (empty text iff 0 donations)", realJson.donations.length === 0 ? await real.dpage.locator("#donorsEmpty").isVisible() : (await real.dpage.locator("#donorsList li").count()) > 0);
-    await real.dctx.close();
+    check("donate.html CSP: connect-src 'none', no external origins", /connect-src 'none';/.test(donCsp) && !/https?:|\*/.test(donCsp), donCsp);
+    check("support.js has no network code", !forbidden.test(fs.readFileSync(path.join(REG_DIR, "support.js"), "utf8")));
+    const sctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: "ko-KR" });
+    const sp = await sctx.newPage();
+    const sreqs = [];
+    sp.on("request", (r) => sreqs.push(r.url()));
+    sp.on("pageerror", (e) => console.log("  [pageerror]", e.message));
+    await sp.goto("http://127.0.0.1:4173/?net=localhost");
+    await sp.waitForSelector("#net");
+    check("register footer: no donate.html link, only the coffee link", (await sp.locator('a[href="donate.html"]').count()) === 0 && (await sp.locator("#footCoffee a").count()) === 1);
+    const also = await sp.$$eval(".foot .also a", (as) => as.map((a) => a.href + "|" + a.target + "|" + a.rel));
+    check("register footer: 'Also by us' links to 다시, 너 and 처음, 너", also.length === 2 && also[0].startsWith("https://dasi-neo.pages.dev/|_blank|noopener") && also[1].startsWith("https://cheoeum-neo.pages.dev/|_blank|noopener"), also.join(","));
+    check("hero art: two crayon images loaded with Korean alt", await sp.$$eval(".hero-art img", (is) => is.length === 2 && is.every((i) => i.complete && i.naturalWidth > 0 && /크레파스/.test(i.alt))));
+    await sp.click('[data-lang="en"]');
+    check("hero art alt + 'Also by us' switch to English", await sp.$$eval(".hero-art img", (is) => is.every((i) => /^Crayon drawing/.test(i.alt))) && (await sp.textContent(".foot .also")).startsWith("Also by us:"));
+    await sp.click('[data-lang="ko"]');
+    const fg = await sp.evaluate(() => { const s = getComputedStyle(document.body); return { size: s.fontSize, lh: s.lineHeight }; });
+    check("body text 17px, line-height 1.7", fg.size === "17px" && Math.abs(parseFloat(fg.lh) - 28.9) < 0.2, JSON.stringify(fg));
+    await sp.goto("http://127.0.0.1:4173/donate.html");
+    await sp.waitForSelector("#donCoffee a");
+    const ca = { href: await sp.getAttribute("#donCoffee a", "href"), target: await sp.getAttribute("#donCoffee a", "target"), rel: await sp.getAttribute("#donCoffee a", "rel") };
+    check("donate.html: Buy Me a Coffee link (new tab, noopener noreferrer)", ca.href === "https://buymeacoffee.com/ilovebot" && ca.target === "_blank" && ca.rel === "noopener noreferrer", JSON.stringify(ca));
+    const dmain = await sp.locator("main").innerText();
+    check("donate.html: no address / QR / network / coin / donor list", !/0x[0-9a-fA-F]{40}/.test(await sp.content()) && !/USDC|ETH|Base 메인넷|후원자 명단|QR/.test(dmain) && (await sp.locator("svg, #donAddress, #donorsList, #qrBox").count()) === 0, dmain.slice(0, 80));
+    check("donate.html: free line + coffee intro (ko)", /무료/.test(dmain) && /커피 한 잔/.test(dmain));
+    await sp.screenshot({ path: path.join(SHOTS, "donate-desktop-ko.png"), fullPage: true });
+    await sp.click('[data-lang="en"]');
+    check("donate.html (en): coffee label + intro in English", /Support with a coffee/.test(await sp.textContent("#donCoffee a")) && /a coffee is a kind way/.test(await sp.locator("main").innerText()));
+    await sp.screenshot({ path: path.join(SHOTS, "donate-desktop-en.png"), fullPage: true });
+    check("support pages: no external network request", sreqs.every((u) => new URL(u).origin === "http://127.0.0.1:4173" || u.startsWith("data:")), [...new Set(sreqs.map((u) => new URL(u).origin))].join(","));
+    await sctx.close();
+    const smob = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "ko-KR" });
+    const smp = await smob.newPage();
+    await smp.goto("http://127.0.0.1:4173/donate.html");
+    await smp.waitForSelector("#donCoffee a");
+    check("mobile: donate page has no horizontal overflow", (await smp.evaluate(() => document.documentElement.scrollWidth)) <= 390);
+    await smp.screenshot({ path: path.join(SHOTS, "donate-mobile-390-ko.png"), fullPage: true });
+    await smob.close();
   } finally {
     if (browser) await browser.close();
     server.close();
