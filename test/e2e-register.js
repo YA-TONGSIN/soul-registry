@@ -178,6 +178,7 @@ async function main() {
     await page.click('[data-lang="ko"]');
     check("language toggle back -> Korean", /절대 올라가지/.test(await page.locator(".notice").innerText()));
     check("footer ko: maker / contact mailto / free line; support link shown (donation on)", (await page.textContent("#footMaker")) === "만든 사람: 신운종 · 이음(Ieum)" && (await page.textContent("#footContact")) === "문의: dkakrptehsrk@gmail.com" && (await page.getAttribute("#footContact a", "href")) === "mailto:dkakrptehsrk@gmail.com" && (await page.textContent("#footFree")) === "이 장부는 무료입니다." && await page.locator("#footDonation").isVisible() && (await page.locator('a[href="donate.html"]').count()) === 1);
+    check("footer coffee link (ko): new tab, noopener noreferrer, exact URL", (await page.getAttribute("#footCoffee a", "href")) === "https://buymeacoffee.com/ilovebot" && (await page.getAttribute("#footCoffee a", "target")) === "_blank" && (await page.getAttribute("#footCoffee a", "rel")) === "noopener noreferrer" && (await page.textContent("#footCoffee a")).includes("커피 한 잔으로 응원하기"));
     check("network select shows localhost", (await page.inputValue("#net")) === "localhost");
     const unlabeled = await page.evaluate(() => [...document.querySelectorAll("input,select,textarea")].filter((e) => !e.labels?.length && !e.getAttribute("aria-label") && e.type !== "radio" && e.type !== "checkbox" || (e.type === "checkbox" && !e.closest("label"))).map((e) => e.id));
     check("every form control has an accessible label", unlabeled.length === 0, unlabeled.join(","));

@@ -100,6 +100,9 @@
     const dEl = $("footDonation"), dState = window.IEUM_DONATION_CHECK(CFG);
     dEl.hidden = !dState.ok;
     if (dState.ok) dEl.replaceChildren(el("a", { href: dState.d.page, text: t("donateLink") }));
+    const cfEl = $("footCoffee"), cf = window.IEUM_COFFEE_LINK(CFG);
+    cfEl.hidden = !cf;
+    if (cf) cfEl.replaceChildren(el("a", { href: cf.url, target: "_blank", rel: "noopener noreferrer", text: cf.label[lang] }));
   }
   function fillNetSelect() {
     const sel = $("net");

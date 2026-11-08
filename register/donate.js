@@ -51,6 +51,13 @@
     document.querySelectorAll(".seg").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
     const f = CFG.footer;
     $("donFree").textContent = (f && f.free && f.free[lang]) || "";
+    const cf = window.IEUM_COFFEE_LINK(CFG), cfEl = $("donCoffee");
+    cfEl.hidden = !cf;
+    if (cf) {
+      const a = document.createElement("a");
+      a.href = cf.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = cf.label[lang];
+      cfEl.replaceChildren(a);
+    }
     $("donOn").hidden = !state.ok;
     $("donOff").hidden = state.ok;
     if (!state.ok) return;

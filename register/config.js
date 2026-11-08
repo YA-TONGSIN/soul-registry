@@ -36,6 +36,12 @@ window.IEUM_CONFIG = {
     contactLabel: { ko: "문의", en: "Contact" },
     contactEmail: "dkakrptehsrk@gmail.com",
     free: { ko: "이 장부는 무료입니다.", en: "This ledger is free." },
+    // Buy Me a Coffee: plain outbound link only (no widget/script/tracking). Empty url or enabled=false hides it.
+    coffee: {
+      enabled: true,
+      url: "https://buymeacoffee.com/ilovebot", // owner-provided 2026-11-08
+      label: { ko: "커피 한 잔으로 응원하기 ☕ (Buy Me a Coffee)", en: "Support with a coffee ☕ (Buy Me a Coffee)" },
+    },
     donation: {
       enabled: true, // owner confirmed 2026-10-26 08:11 (unit OK)
       page: "donate.html",

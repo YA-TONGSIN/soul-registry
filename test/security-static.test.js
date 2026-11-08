@@ -44,7 +44,7 @@ describe("register/ static security", function () {
     const app = fs.readFileSync(path.join(REG, "app.js"), "utf8");
     // every href built in app.js is a fixed prefix (mailto:, explorer + "/tx/", blob URL, config value) or an https URL checked by evidenceUrl()
     const hrefs = [...app.matchAll(/href:\s*([^,}]+)/g)].map((m) => m[1].trim());
-    for (const h of hrefs) expect(h).to.match(/^("mailto:"|net\.explorer|URL\.createObjectURL|dState\.d\.page|u$)/);
+    for (const h of hrefs) expect(h).to.match(/^("mailto:"|net\.explorer|URL\.createObjectURL|dState\.d\.page|cf\.url|u$)/);
     expect(app).to.match(/\^https:\\\/\\\/\[\^\\s\]\+\$/); // evidenceUrl only accepts https:// URLs
   });
 });
