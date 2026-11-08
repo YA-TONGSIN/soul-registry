@@ -21,11 +21,13 @@
 <meta name="twitter:title" content="이음 장부 — AI의 SOUL 버전 계보 / Ieum Ledger">
 <meta name="twitter:image" content="https://ieum-ledger.pages.dev/og-image.png">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="family.css">
 </head>
 <body>
 <a class="skip" href="#main" data-i18n="skip">본문으로 건너뛰기</a>
 <header class="top">
   <div>
+    <a class="fam-top" href="#family"><span lang="ko">다른 도구 ↓</span><span lang="en">More tools ↓</span></a>
     <h1 data-i18n="title">이음 장부 · 등록</h1>
   </div>
   <div class="controls">
@@ -288,7 +290,27 @@
     </div>  </section>
 </main>
 
-<footer class="foot"><p data-i18n="footerNote"></p><p class="also"><span data-i18n="alsoBy"></span> <a href="https://dasi-neo.pages.dev/" target="_blank" rel="noopener">다시, 너</a> · <a href="https://cheoeum-neo.pages.dev/" target="_blank" rel="noopener">처음, 너</a></p><div id="footerExtra" hidden><p id="footMaker"></p><p id="footContact" hidden></p><p id="footFree"></p><p id="footCoffee" hidden></p></div></footer>
+<!-- family:start -->
+<section id="family" class="fam" aria-labelledby="famh">
+  <h2 id="famh"><span lang="ko">가족 사이트</span><span lang="en">Sister sites</span></h2>
+  <p class="fam-sub"><span lang="ko">같은 사람들이 만든 무료 도구예요</span><span lang="en">Free tools by the same makers</span></p>
+  <div class="fam-grid">
+  <article class="fam-card" data-site="cheoeum">
+    <img src="img/fam-cheoeum.webp" width="64" height="64" loading="lazy" alt="크레파스 그림: 스탠드 불빛 아래 질문 카드를 고르는 사람" data-en-alt="Crayon drawing: someone choosing question cards under a desk lamp">
+    <b><span lang="ko">처음, 너</span><span lang="en">First, You</span></b>
+    <p><span lang="ko">질문에 답하면 나만의 AI 친구 카드</span><span lang="en">Answer a few questions, get your own AI companion card</span></p>
+    <a class="fam-go" href="https://cheoeum-neo.pages.dev/" data-en-href="https://cheoeum-neo.pages.dev/?lang=en" target="_blank" rel="noopener"><span lang="ko">바로가기 →</span><span lang="en">Open →</span></a>
+  </article>
+  <article class="fam-card" data-site="dasi">
+    <img src="img/fam-dasi.webp" width="64" height="64" loading="lazy" alt="크레파스 그림: 밤 창가에서 폰 속 캐릭터와 이야기하는 사람" data-en-alt="Crayon drawing: someone by a night window talking with a character on their phone">
+    <b><span lang="ko">다시, 너</span><span lang="en">Again, You</span></b>
+    <p><span lang="ko">내 AI 캐릭터를 다른 앱으로 옮겨 지키기</span><span lang="en">Move your AI companion to another app and keep them</span></p>
+    <a class="fam-go" href="https://dasi-neo.pages.dev/" data-en-href="https://dasi-neo.pages.dev/?lang=en" target="_blank" rel="noopener"><span lang="ko">바로가기 →</span><span lang="en">Open →</span></a>
+  </article>
+  </div>
+</section>
+<!-- family:end -->
+<footer class="foot"><p data-i18n="footerNote"></p><div id="footerExtra" hidden><p id="footMaker"></p><p id="footContact" hidden></p><p id="footFree"></p><p id="footCoffee" hidden></p></div></footer>
 
 <script src="config.js"></script>
 <script src="i18n.js"></script>
@@ -299,5 +321,6 @@
 <script src="vendor/abi.js"></script>
 <script src="app.js"></script>
 <script src="demo.js"></script>
+<script src="family.js"></script>
 </body>
 </html>

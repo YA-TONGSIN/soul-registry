@@ -443,11 +443,12 @@ async function main() {
     await sp.goto("http://127.0.0.1:4173/?net=localhost");
     await sp.waitForSelector("#net");
     check("register footer: no donate.html link, only the coffee link", (await sp.locator('a[href="donate.html"]').count()) === 0 && (await sp.locator("#footCoffee a").count()) === 1);
-    const also = await sp.$$eval(".foot .also a", (as) => as.map((a) => a.href + "|" + a.target + "|" + a.rel));
-    check("register footer: 'Also by us' links to 다시, 너 and 처음, 너", also.length === 2 && also[0].startsWith("https://dasi-neo.pages.dev/|_blank|noopener") && also[1].startsWith("https://cheoeum-neo.pages.dev/|_blank|noopener"), also.join(","));
-    check("hero art: two crayon images loaded with Korean alt", await sp.$$eval(".hero-art img", (is) => is.length === 2 && is.every((i) => i.complete && i.naturalWidth > 0 && /크레파스/.test(i.alt))));
+    await sp.locator("#family").scrollIntoViewIfNeeded();
+    await sp.waitForFunction(() => [...document.querySelectorAll("#family img")].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 5000 }).catch(() => {});
+    const fam = await sp.$$eval("#family .fam-card", (cs) => cs.map((c) => { const a = c.querySelector("a.fam-go"), i = c.querySelector("img"); return [c.dataset.site, a.href, a.target, a.rel, i.complete && i.naturalWidth > 0, /크레파스/.test(i.alt)].join("|"); }));
+    check("family cards (ko): 다시, 너 + 처음, 너, new tab noopener, thumbnails loaded with Korean alt", fam.length === 2 && fam[0] === "cheoeum|https://cheoeum-neo.pages.dev/|_blank|noopener|true|true" && fam[1] === "dasi|https://dasi-neo.pages.dev/|_blank|noopener|true|true", fam.join(","));    check("hero art: two crayon images loaded with Korean alt", await sp.$$eval(".hero-art img", (is) => is.length === 2 && is.every((i) => i.complete && i.naturalWidth > 0 && /크레파스/.test(i.alt))));
     await sp.click('[data-lang="en"]');
-    check("hero art alt + 'Also by us' switch to English", await sp.$$eval(".hero-art img", (is) => is.every((i) => /^Crayon drawing/.test(i.alt))) && (await sp.textContent(".foot .also")).startsWith("Also by us:"));
+    check("hero art alt + family cards switch to English (?lang=en links, English alt)", await sp.$$eval(".hero-art img", (is) => is.every((i) => /^Crayon drawing/.test(i.alt))) && (await sp.$$eval("#family a.fam-go", (as) => as.map((a) => a.href).join(","))) === "https://cheoeum-neo.pages.dev/?lang=en,https://dasi-neo.pages.dev/?lang=en" && (await sp.$$eval("#family img", (is) => is.every((i) => /^Crayon drawing/.test(i.alt)))) && (await sp.locator("#famh").innerText()) === "Sister sites", await sp.$$eval("#family a.fam-go", (as) => as.map((a) => a.href).join(",")) + " / " + (await sp.locator("#famh").innerText()));
     await sp.click('[data-lang="ko"]');
     const fg = await sp.evaluate(() => { const s = getComputedStyle(document.body); return { size: s.fontSize, lh: s.lineHeight }; });
     check("body text 17px, line-height 1.7", fg.size === "17px" && Math.abs(parseFloat(fg.lh) - 28.9) < 0.2, JSON.stringify(fg));

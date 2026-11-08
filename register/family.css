@@ -1,0 +1,14 @@
+
+.fam{max-width:640px;margin:24px auto 8px;padding:0 4px;text-align:left}
+.fam h2{font-size:19px;margin:0 0 4px;text-align:center}
+.fam .fam-sub{font-size:14px;opacity:.8;margin:0 0 12px;text-align:center}
+.fam-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fam-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:14px 10px;border:1px solid rgba(140,140,160,.4);border-radius:14px;background:rgba(140,140,160,.09)}
+.fam-card img{width:64px;height:64px;border-radius:50%;object-fit:cover}
+.fam-card b{font-size:16px;line-height:1.3}
+.fam-card p{font-size:13.5px;line-height:1.45;margin:0;opacity:.85;flex:1}
+.fam-card a.fam-go{display:inline-flex;align-items:center;justify-content:center;min-height:44px;width:100%;margin-top:4px;border-radius:10px;background:#f0a35e;color:#1a1208;font-weight:700;font-size:15px;text-decoration:none}
+.fam-top{font-size:13px;text-decoration:none}
+html[lang="en"] .fam [lang="ko"],html[lang="en"] .fam-top [lang="ko"],html:not([lang="en"]) .fam [lang="en"],html:not([lang="en"]) .fam-top [lang="en"]{display:none}
+.top .fam-top{float:right;margin-left:8px}
+@media (max-width:340px){.fam-grid{grid-template-columns:1fr}}
