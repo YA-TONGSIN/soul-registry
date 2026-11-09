@@ -179,4 +179,10 @@ input[type=text], input[type=number], textarea, select { background: var(--sunk)
 .also { margin-top: .6rem !important; }
 .coffee { margin: 1rem 0 .4rem; }
 .coffee .btn { text-decoration: none; color: var(--accent-ink); }
-.qr { background: #fff; }
+.qr { background: #fff; }.dcard { max-width: 820px; margin: 1.1rem auto; padding: 22px 20px; border-radius: 16px; }
+.donwrap { max-width: 820px; margin: 0 auto; padding: 0 1rem; }
+.dcard .step { font-size: 14px; font-weight: 700; color: #b45f06; letter-spacing: .06em; }
+.dcard .dtitle { margin: 4px 0 6px; font-size: 1.2rem; }
+.dcard .dhint { margin: 0 0 12px; color: var(--muted); }
+.dcard .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+.dcard .go { display: inline-flex; align-items: center; min-height: 48px; font-weight: 700; color: var(--accent); }

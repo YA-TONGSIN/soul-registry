@@ -15,13 +15,7 @@
     document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
     const f = CFG.footer;
     $("donFree").textContent = (f && f.free && f.free[lang]) || "";
-    const cf = window.IEUM_COFFEE_LINK(CFG), cfEl = $("donCoffee");
-    cfEl.hidden = !cf;
-    if (cf) {
-      const a = document.createElement("a");
-      a.href = cf.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.className = "btn"; a.textContent = cf.label[lang];
-      cfEl.replaceChildren(a);
-    }
+    window.IEUM_COFFEE_CARD($("donCoffee"), CFG, t, lang);
   }
 
   document.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => {

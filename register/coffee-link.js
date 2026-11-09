@@ -10,4 +10,15 @@
     return { url: c.url, label: c.label };
   }
   window.IEUM_COFFEE_LINK = coffee;
+  // Fills the shared support card (same layout as the sibling sites): label, title, hint, link button.
+  window.IEUM_COFFEE_CARD = function (card, cfg, t, lang) {
+    var cf = coffee(cfg);
+    card.hidden = !cf;
+    if (!cf) return;
+    function mk(tag, cls, text) { var n = document.createElement(tag); n.className = cls; n.textContent = text; return n; }
+    var a = mk("a", "go", cf.label[lang]);
+    a.href = cf.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+    var row = mk("div", "row", ""); row.appendChild(a);
+    card.replaceChildren(mk("div", "step", t("cardStep")), mk("h2", "dtitle", t("cardTitle")), mk("p", "dhint", t("cardHint")), row);
+  };
 })();

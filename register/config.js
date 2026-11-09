@@ -33,7 +33,7 @@ window.IEUM_CONFIG = {
     coffee: {
       enabled: true,
       url: "https://buymeacoffee.com/ilovebot", // owner-provided 2026-11-08
-      label: { ko: "커피 한 잔으로 응원하기 ☕ (Buy Me a Coffee)", en: "Support with a coffee ☕ (Buy Me a Coffee)" },
+      label: { ko: "후원하기", en: "Support us" },
     },
   },
   allowMainnet: false, // keep false until the owner approves a public launch

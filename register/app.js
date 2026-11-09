@@ -98,9 +98,7 @@
       const a = el("a", { href: "mailto:" + f.contactEmail, text: f.contactEmail });
       cEl.replaceChildren(document.createTextNode(((f.contactLabel && f.contactLabel[lang]) || "") + ": "), a);
     }
-    const cfEl = $("footCoffee"), cf = window.IEUM_COFFEE_LINK(CFG);
-    cfEl.hidden = !cf;
-    if (cf) cfEl.replaceChildren(el("a", { href: cf.url, target: "_blank", rel: "noopener noreferrer", text: cf.label[lang] }));
+    window.IEUM_COFFEE_CARD($("footCoffee"), CFG, t, lang);
   }
   function fillNetSelect() {
     const sel = $("net");

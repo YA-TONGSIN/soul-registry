@@ -178,7 +178,7 @@ async function main() {
     await page.click('[data-lang="ko"]');
     check("language toggle back -> Korean", /절대 올라가지/.test(await page.locator(".notice").innerText()));
     check("footer ko: maker / contact mailto / free line; no crypto support link", (await page.textContent("#footMaker")) === "만든 사람: 신운종 · 이음(Ieum)" && (await page.textContent("#footContact")) === "문의: dkakrptehsrk@gmail.com" && (await page.getAttribute("#footContact a", "href")) === "mailto:dkakrptehsrk@gmail.com" && (await page.textContent("#footFree")) === "이 장부는 무료입니다." && (await page.locator('a[href="donate.html"]').count()) === 0);
-    check("footer coffee link (ko): new tab, noopener noreferrer, exact URL", (await page.getAttribute("#footCoffee a", "href")) === "https://buymeacoffee.com/ilovebot" && (await page.getAttribute("#footCoffee a", "target")) === "_blank" && (await page.getAttribute("#footCoffee a", "rel")) === "noopener noreferrer" && (await page.textContent("#footCoffee a")).includes("커피 한 잔으로 응원하기"));
+    check("footer coffee link (ko): new tab, noopener noreferrer, exact URL", (await page.getAttribute("#footCoffee a", "href")) === "https://buymeacoffee.com/ilovebot" && (await page.getAttribute("#footCoffee a", "target")) === "_blank" && (await page.getAttribute("#footCoffee a", "rel")) === "noopener noreferrer" && (await page.textContent("#footCoffee a")) === "후원하기" && (await page.textContent("#footCoffee h2")) === "이 연구가 마음에 닿았다면");
     check("network select shows localhost", (await page.inputValue("#net")) === "localhost");
     const unlabeled = await page.evaluate(() => [...document.querySelectorAll("input,select,textarea")].filter((e) => !e.labels?.length && !e.getAttribute("aria-label") && e.type !== "radio" && e.type !== "checkbox" || (e.type === "checkbox" && !e.closest("label"))).map((e) => e.id));
     check("every form control has an accessible label", unlabeled.length === 0, unlabeled.join(","));
@@ -461,7 +461,7 @@ async function main() {
     check("donate.html: free line + coffee intro (ko)", /무료/.test(dmain) && /커피 한 잔/.test(dmain));
     await sp.screenshot({ path: path.join(SHOTS, "donate-desktop-ko.png"), fullPage: true });
     await sp.click('[data-lang="en"]');
-    check("donate.html (en): coffee label + intro in English", /Support with a coffee/.test(await sp.textContent("#donCoffee a")) && /a coffee is a kind way/.test(await sp.locator("main").innerText()));
+    check("donate.html (en): coffee label + intro in English", (await sp.textContent("#donCoffee a")) === "Support us" && /touched you/.test(await sp.textContent("#donCoffee h2")) && /a coffee is a kind way/.test(await sp.locator("main").innerText()));
     await sp.screenshot({ path: path.join(SHOTS, "donate-desktop-en.png"), fullPage: true });
     check("support pages: no external network request", sreqs.every((u) => new URL(u).origin === "http://127.0.0.1:4173" || u.startsWith("data:")), [...new Set(sreqs.map((u) => new URL(u).origin))].join(","));
     await sctx.close();
